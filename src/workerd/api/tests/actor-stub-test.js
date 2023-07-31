@@ -29,13 +29,10 @@ export default {
     let id = env.ns.idFromName("foo");
     let obj = env.ns.get(id);
     // Since we have the flag enabled, we should be able to call foo();
-    // TODO(soon): Note that we have only implemented the client-side changes, so `obj.foo()` does
-    // not try to call a method called "foo" on the remote. This will need to be updated in the
-    // future.
-    let expected = "Error: WorkerRpc is unimplemented";
+    let expected = "foo from remote";
     try {
-      let foo = obj.foo();
-      if (typeof foo != "exception" && foo != expected) {
+      let foo = await obj.foo();
+      if (typeof foo != "string" && foo != expected) {
         throw foo;
       }
     } catch(e) {

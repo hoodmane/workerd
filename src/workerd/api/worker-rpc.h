@@ -3,10 +3,20 @@
 //     https://opensource.org/licenses/Apache-2.0
 
 #pragma once
+// Classes for calling a remote Worker/Durable Object's methods from the stub over RPC.
+// This file contains the generic stub object (WorkerRpc), as well as classes for sending and
+// delivering the RPC event.
+//
+// Upon invoking a method, the stub (WorkerRpc) obtains a capability (JsRpcTarget) by dispatching a
+// `getJsRpcTarget` custom event. See worker-interface.capnp for the definition.
+// The stub then uses the JsRpcTarget capability to send the serialized method name and arguments
+// over RPC to the remote Worker/DO.
 
 #include <workerd/api/http.h>
 #include <workerd/jsg/jsg.h>
 #include <workerd/jsg/function.h>
+#include <workerd/api/basics.h>
+#include <workerd/io/worker-interface.capnp.h>
 
 namespace workerd::api {
 
@@ -24,6 +34,20 @@ public:
       RequiresHostAndProtocol requiresHost,
       bool inHouse)
     : Fetcher(kj::mv(outgoingFactory), requiresHost, inHouse) {}
+
+  struct ResponseAndResult {
+    capnp::Response<rpc::JsRpcTarget::CallResults> rpcResponse;
+    WorkerInterface::CustomEvent::Result customEventResult;
+  };
+
+  // Serializes the method name and arguments, calls customEvent to get the capability, and uses
+  // the capability to send our request to the remote Worker. This resolves once both the
+  // customEvent and RPC promises resolve.
+  kj::Promise<ResponseAndResult> sendWorkerRpc(jsg::Lock& js, kj::StringPtr name,
+      const v8::FunctionCallbackInfo<v8::Value>& args);
+
+  // Deserializes the RPC response and checks that the customEvent completed as expected.
+  jsg::Value handleRpcResponse(jsg::Lock& js, ResponseAndResult outcome);
 
   kj::Maybe<jsg::JsValue> getNamed(jsg::Lock& js, kj::StringPtr name) override;
 
@@ -45,9 +69,64 @@ public:
     }
     JSG_INHERIT(Fetcher);
   }
+private:
+    // Event ID for WorkerRpc.
+    //
+    // Similar to WebSocket hibernation, we define this event ID in the internal codebase, but since
+    // we don't create WorkerRpc stubs from our internal code, we can't pass the event type in --
+    // so we hardcode it here.
+    static constexpr uint16_t WORKER_RPC_EVENT_TYPE = 9;
 };
 
-#define EW_WORKER_RPC_ISOLATE_TYPES  \
-  api::WorkerRpc
+class GetJsRpcTargetEvent final: public ExtendableEvent {
+public:
+  explicit GetJsRpcTargetEvent();
+
+  static jsg::Ref<GetJsRpcTargetEvent> constructor(kj::String type) = delete;
+
+  JSG_RESOURCE_TYPE(GetJsRpcTargetEvent) {
+    JSG_INHERIT(ExtendableEvent);
+  }
+};
+
+// `getJsRpcTarget` returns a capability that provides the client a way to call remote methods
+// over RPC. We drain the IncomingRequest after the capability is used to run the relevant JS.
+class GetJsRpcTargetCustomEventImpl final: public WorkerInterface::CustomEvent {
+public:
+  GetJsRpcTargetCustomEventImpl(uint16_t typeId,
+      kj::PromiseFulfillerPair<rpc::JsRpcTarget::Client> paf =
+          kj::newPromiseAndFulfiller<rpc::JsRpcTarget::Client>())
+    : capFulfiller(kj::mv(paf.fulfiller)),
+      clientCap(kj::mv(paf.promise)),
+      typeId(typeId) {}
+
+  kj::Promise<Result> run(
+      kj::Own<IoContext::IncomingRequest> incomingRequest,
+      kj::Maybe<kj::StringPtr> entrypointName) override;
+
+  kj::Promise<Result> sendRpc(
+      capnp::HttpOverCapnpFactory& httpOverCapnpFactory,
+      capnp::ByteStreamFactory& byteStreamFactory,
+      kj::TaskSet& waitUntilTasks,
+      rpc::EventDispatcher::Client dispatcher) override;
+
+  uint16_t getType() override {
+    return typeId;
+  }
+
+  rpc::JsRpcTarget::Client getCap() { return clientCap; }
+
+private:
+  kj::Own<kj::PromiseFulfiller<workerd::rpc::JsRpcTarget::Client>> capFulfiller;
+
+  // We need to set the client/server capability on the event itself to get around CustomEvent's
+  // limited return type.
+  rpc::JsRpcTarget::Client clientCap;
+  uint16_t typeId;
+};
+
+#define EW_WORKER_RPC_ISOLATE_TYPES   \
+  api::WorkerRpc,                     \
+  api::GetJsRpcTargetEvent
 
 }; // namespace workerd::api
