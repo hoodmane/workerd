@@ -41,8 +41,7 @@ wd_cc_library(
     hdrs = ["url.h"],
     visibility = ["//visibility:public"],
     deps = [
-        "@v8//:v8_icu",
-        "@workerd//:icudata-embed",
+        "@workerd-v8//:v8",
         "@capnp-cpp//src/kj",
         "@ada-url",
         ":exception",

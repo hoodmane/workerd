@@ -1243,6 +1243,623 @@ KJ_TEST("URLPattern - WPT compile success") {
 #include "url-pattern-test-corpus-success.h"
 }
 
+// ======================================================================================
+
+KJ_TEST("Minimal URL Parse") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse 2") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Username") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://abc@example.org/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == "abc"_kj);
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Username and Password") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://abc:xyz@example.org/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == "abc"_kj);
+  KJ_ASSERT(record.getPassword() == "xyz"_kj);
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Password, no Username") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://:xyz@example.org/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == "xyz"_kj);
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Port (non-default)") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org:123/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org:123"_kj);
+  KJ_ASSERT(record.getHostname() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == "123"_kj);
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Port (default)") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org:443/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Port delimiter with no port)") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org:/"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - One path segment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/abc"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/abc"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Leading single dot segment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/./abc"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/abc"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Multiple single dot segment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/././././abc"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/abc"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Leading double dot segment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/../abc"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/abc"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Leading mixed dot segment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/../.././.././abc"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/abc"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Three path segments") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/a/b/c"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/a/b/c"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Three path segments with double dot") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/a/b/../c"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/a/c"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Three path segments with single dot") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org/a/b/./c"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/a/b/c"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Query present but empty") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org?"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Query minimal") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org?123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == "?123"_kj);
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Query minimal after missing port") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org:?123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == "?123"_kj);
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Query minimal after missing port and empty path") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org:/?123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == "?123"_kj);
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Fragment present but empty") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org#"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == kj::str());
+}
+
+KJ_TEST("Minimal URL Parse - Fragment minimal") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org#123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == "#123"_kj);
+}
+
+KJ_TEST("Minimal URL Parse - Fragment minimal") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org?#123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == kj::str());
+  KJ_ASSERT(record.getHash() == "#123"_kj);
+}
+
+KJ_TEST("Minimal URL Parse - Fragment minimal") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://example.org?abc#123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == kj::str());
+  KJ_ASSERT(record.getPassword() == kj::str());
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == kj::str());
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+  KJ_ASSERT(record.getSearch() == "?abc"_kj);
+  KJ_ASSERT(record.getHash() == "#123"_kj);
+}
+
+KJ_TEST("Minimal URL Parse - All together") {
+  auto record =
+      KJ_ASSERT_NONNULL(Url::tryParse("https://abc:xyz@example.org:123/a/b/c?abc#123"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "https:"_kj);
+  KJ_ASSERT(record.getUsername() == "abc"_kj);
+  KJ_ASSERT(record.getPassword() == "xyz"_kj);
+  KJ_ASSERT(record.getHost() == "example.org:123"_kj);
+  KJ_ASSERT(record.getHostname() == "example.org"_kj);
+  KJ_ASSERT(record.getPort() == "123"_kj);
+  KJ_ASSERT(record.getPathname() == "/a/b/c"_kj);
+  KJ_ASSERT(record.getSearch() == "?abc"_kj);
+  KJ_ASSERT(record.getHash() == "#123"_kj);
+}
+
+KJ_TEST("Minimal URL Parse - Not special (data URL)") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("data:something"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "data:"_kj);
+  KJ_ASSERT(record.getPathname() == "something"_kj);
+}
+
+KJ_TEST("Minimal URL Parse - unknown scheme") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("com.tapbots.Ivory.219:/request_token?code=8"_kj));
+
+  KJ_ASSERT(record.getProtocol() == "com.tapbots.ivory.219:"_kj);
+  KJ_ASSERT(record.getPathname() == "/request_token"_kj);
+  KJ_ASSERT(record.getSearch() == "?code=8"_kj);
+}
+
+KJ_TEST("Special scheme URLS") {
+  kj::String tests[] = {
+    kj::str("http://example.org"),
+    kj::str("https://example.org"),
+    kj::str("ftp://example.org"),
+    kj::str("ws://example.org"),
+    kj::str("wss://example.org"),
+    kj::str("file:///example"),
+  };
+
+  for (auto n = 0; n < kj::size(tests); n++) {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse(tests[n].asPtr()));
+  }
+}
+
+KJ_TEST("Trim leading and trailing control/space") {
+  auto input = kj::str(" \0\1 http://example.org \2\3 "_kj);
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse(input.asPtr()));
+  KJ_ASSERT(record.getProtocol() == "http:"_kj);
+  KJ_ASSERT(record.getHost() == "example.org"_kj);
+  KJ_ASSERT(record.getPathname() == "/"_kj);
+}
+
+KJ_TEST("Percent encoding in username/password") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://%66oo:%66oo@example.com/"_kj));
+  KJ_ASSERT(record.getUsername() == "%66oo"_kj);
+  KJ_ASSERT(record.getPassword() == "%66oo"_kj);
+}
+
+KJ_TEST("Percent encoding in hostname") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://%66oo"_kj));
+  KJ_ASSERT(record.getHost() == "foo"_kj);
+}
+
+KJ_TEST("Percent encoding in hostname") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://%66oo"_kj));
+  KJ_ASSERT(record.getHost() == "foo"_kj);
+}
+
+KJ_TEST("Percent encoding in pathname") {
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://example.org/%2e/%31%32%ZZ"_kj));
+    KJ_ASSERT(record.getPathname() == "/%31%32%ZZ"_kj);
+    // The %2e is properly detected as a single dot segment.
+    // The invalid percent encoded %ZZ is ignored.
+  }
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://example.org/%2e/%31%32%ZZ/%2E"_kj));
+    KJ_ASSERT(record.getPathname() == "/%31%32%ZZ/"_kj);
+  }
+}
+
+KJ_TEST("Percent encoding in query") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://example.org?/%2e/%31%32%ZZ"_kj));
+  KJ_ASSERT(record.getSearch() == "?/%2e/%31%32%ZZ"_kj);
+  // The invalid percent encoded %ZZ is ignored.
+}
+
+KJ_TEST("Percent encoding in fragment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://example.org#/%2e/%31%32%ZZ"_kj));
+  KJ_ASSERT(record.getHash() == "#/%2e/%31%32%ZZ"_kj);
+  // The invalid percent encoded %ZZ is ignored.
+}
+
+KJ_TEST("Percent encoding of non-ascii characters in path, query, fragment") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://example.org/café?café#café"_kj));
+  KJ_ASSERT(record.getPathname() == "/caf%C3%A9"_kj);
+  KJ_ASSERT(record.getSearch() == "?caf%C3%A9"_kj);
+  KJ_ASSERT(record.getHash() == "#caf%C3%A9"_kj);
+}
+
+KJ_TEST("IDNA-conversion non-ascii characters in hostname") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://café.com"_kj));
+  KJ_ASSERT(record.getHost() == "xn--caf-dma.com"_kj);
+}
+
+KJ_TEST("IPv4 in hostname") {
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://123.210.123.121"_kj));
+    KJ_ASSERT(record.getHost() == "123.210.123.121"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://2077391737"_kj));
+    KJ_ASSERT(record.getHost() == "123.210.123.121"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://1.1"_kj));
+    KJ_ASSERT(record.getHost() == "1.0.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://0x1.0x1"_kj));
+    KJ_ASSERT(record.getHost() == "1.0.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://01.0x1"_kj));
+    KJ_ASSERT(record.getHost() == "1.0.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://0x1000001"_kj));
+    KJ_ASSERT(record.getHost() == "1.0.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://0100000001"_kj));
+    KJ_ASSERT(record.getHost() == "1.0.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://192.168.1"_kj));
+    KJ_ASSERT(record.getHost() == "192.168.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://192.0xa80001"_kj));
+    KJ_ASSERT(record.getHost() == "192.168.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://192.11010049"_kj));
+    KJ_ASSERT(record.getHost() == "192.168.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://0300.11010049"_kj));
+    KJ_ASSERT(record.getHost() == "192.168.0.1"_kj);
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://0300.0xa80001"_kj));
+    KJ_ASSERT(record.getHost() == "192.168.0.1"_kj);
+  }
+
+  {
+    // Yes, this is a valid IPv4 address also.
+    // You might be asking yourself, why would anyone do this?
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("http://0xc0.11010049"_kj));
+    KJ_ASSERT(record.getHost() == "192.168.0.1"_kj);
+  }
+
+  {
+    KJ_ASSERT(Url::tryParse("https://999.999.999.999"_kj) == kj::none);
+    KJ_ASSERT(Url::tryParse("https://123.999.999.999"_kj) == kj::none);
+    KJ_ASSERT(Url::tryParse("https://123.123.999.999"_kj) == kj::none);
+    KJ_ASSERT(Url::tryParse("https://123.123.123.999"_kj) == kj::none);
+    KJ_ASSERT(Url::tryParse("https://4294967296"_kj) == kj::none);
+  }
+}
+
+KJ_TEST("IPv6 in hostname") {
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://[1:1:1:1:1:1:1:1]"_kj));
+    KJ_ASSERT(record.getHost() == "[1:1:1:1:1:1:1:1]"_kj);
+  }
+
+  {
+    // Compressed segments work
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://[1::1]"_kj));
+    KJ_ASSERT(record.getHost() == "[1::1]"_kj);
+  }
+
+  {
+    // Compressed segments work
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://[::]"_kj));
+    KJ_ASSERT(record.getHost() == "[::]"_kj);
+  }
+
+  {
+    // Normalized form is shortest, lowercase serialization.
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://[11:AF:0:0:0::0001]"_kj));
+    KJ_ASSERT(record.getHost() == "[11:af::1]"_kj);
+  }
+
+  {
+    // IPv4-in-IPv6 syntax is supported
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("https://[2001:db8:122:344::192.0.2.33]"_kj));
+    KJ_ASSERT(record.getHost() == "[2001:db8:122:344::c000:221]"_kj);
+  }
+
+  KJ_ASSERT(Url::tryParse("https://[zz::top]"_kj) == kj::none);
+}
+
+KJ_TEST("javascript: URLS") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("jAvAsCrIpT: alert('boo'); "_kj));
+  KJ_ASSERT(record.getProtocol() == "javascript:"_kj);
+  KJ_ASSERT(record.getPathname() == " alert('boo');"_kj);
+}
+
+KJ_TEST("data: URLS") {
+  {
+    auto record = KJ_ASSERT_NONNULL(Url::tryParse("data:,Hello%2C%20World%21"_kj));
+    KJ_ASSERT(record.getProtocol() == "data:"_kj);
+    KJ_ASSERT(record.getPathname() == ",Hello%2C%20World%21"_kj);
+  }
+  {
+    auto record =
+        KJ_ASSERT_NONNULL(Url::tryParse("data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="_kj));
+    KJ_ASSERT(record.getProtocol() == "data:"_kj);
+    KJ_ASSERT(record.getPathname() == "text/plain;base64,SGVsbG8sIFdvcmxkIQ=="_kj);
+  }
+  {
+    auto record =
+        KJ_ASSERT_NONNULL(Url::tryParse(
+            "data:text/html,%3Ch1%3EHello%2C%20World%21%3C%2Fh1%3E"_kj));
+    KJ_ASSERT(record.getProtocol() == "data:"_kj);
+    KJ_ASSERT(record.getPathname() == "text/html,%3Ch1%3EHello%2C%20World%21%3C%2Fh1%3E"_kj);
+  }
+  {
+    auto record =
+        KJ_ASSERT_NONNULL(Url::tryParse("data:text/html,<script>alert('hi');</script>"_kj));
+    KJ_ASSERT(record.getProtocol() == "data:"_kj);
+    KJ_ASSERT(record.getPathname() == "text/html,<script>alert('hi');</script>"_kj);
+  }
+}
+
+KJ_TEST("blob: URLS") {
+  auto record = KJ_ASSERT_NONNULL(Url::tryParse("blob:https://example.org"_kj));
+  KJ_ASSERT(record.getProtocol() == "blob:"_kj);
+  KJ_ASSERT(record.getPathname() == "https://example.org"_kj);
+}
+
+KJ_TEST("Relative URLs") {
+  {
+    auto record = KJ_ASSERT_NONNULL(
+        Url::tryParse(kj::str(), "https://abc:def@example.org:81/a/b/c?query#fragment"_kj));
+    KJ_ASSERT(record.getProtocol() == "https:"_kj);
+    KJ_ASSERT(record.getUsername() == "abc"_kj);
+    KJ_ASSERT(record.getPassword() == "def"_kj);
+    KJ_ASSERT(record.getHost() == "example.org:81"_kj);
+    KJ_ASSERT(record.getPathname() == "/a/b/c"_kj);
+    KJ_ASSERT(record.getSearch() == "?query"_kj);
+    KJ_ASSERT(record.getHash() == kj::str());
+  }
+
+  {
+    auto record = KJ_ASSERT_NONNULL(
+        Url::tryParse("/xyz"_kj, "https://abc:def@example.org:81/a/b/c?query#fragment"_kj));
+    KJ_ASSERT(record.getProtocol() == "https:"_kj);
+    KJ_ASSERT(record.getUsername() == "abc"_kj);
+    KJ_ASSERT(record.getPassword() == "def"_kj);
+    KJ_ASSERT(record.getHost() == "example.org:81"_kj);
+    KJ_ASSERT(record.getPathname() == "/xyz"_kj);
+    KJ_ASSERT(record.getSearch() == kj::str());
+    KJ_ASSERT(record.getHash() == kj::str());
+  }
+
+  {
+    auto record =
+        KJ_ASSERT_NONNULL(Url::tryParse("../../../../../././../../././../.././abc"_kj,
+            "https://abc:def@example.org:81/a/b/c?query#fragment"_kj));
+    KJ_ASSERT(record.getPathname() == "/abc"_kj);
+  }
+
+  {
+    auto record = Url::tryParse("/anything"_kj, "data:cannot-be-base"_kj);
+    KJ_ASSERT(record == kj::none);
+  }
+}
+
+KJ_TEST("Can parse") {
+  {
+    KJ_ASSERT(Url::canParse("http://example.org"_kj));
+    KJ_ASSERT(Url::canParse("foo"_kj, "http://example.org"_kj));
+    KJ_ASSERT(!Url::canParse("this is not a parseable URL"_kj));
+    KJ_ASSERT(!Url::canParse("foo"_kj, "base is not a URL"_kj));
+  }
+}
+
 }  // namespace
 }  // namespace workerd::jsg::test
 

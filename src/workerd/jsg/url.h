@@ -99,6 +99,9 @@ public:
   // Convert a Unicode hostname to ASCII.
   static kj::Array<const char> idnToAscii(kj::ArrayPtr<const char> value) KJ_WARN_UNUSED_RESULT;
 
+  static bool isSpecialScheme(kj::StringPtr protocol);
+  static bool isSpecialSchemeDefaultPort(kj::StringPtr protocol, kj::StringPtr port);
+
 private:
   Url(kj::Own<void> inner);
   kj::Own<void> inner;
@@ -247,8 +250,7 @@ public:
 
   // Processes the given init according to the specified mode and options.
   // If a kj::String is returned, then processing failed and the string
-  // is the description to include in the error message (if any). This is
-  // exposed here for testing only.
+  // is the description to include in the error message (if any).
   static Result<Init> processInit(Init init,
                                   kj::Maybe<ProcessInitOptions> options = kj::none)
                                   KJ_WARN_UNUSED_RESULT;
