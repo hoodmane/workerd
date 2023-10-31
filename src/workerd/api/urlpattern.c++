@@ -25,15 +25,20 @@ jsg::JsRef<jsg::JsRegExp> compileRegex(jsg::Lock& js,
 
 jsg::Ref<URLPattern> create(jsg::Lock& js, jsg::UrlPattern pattern) {
   bool ignoreCase = pattern.getIgnoreCase();
-  return jsg::alloc<URLPattern>(kj::mv(pattern),
-      compileRegex(js, pattern.getProtocol(), ignoreCase),
-      compileRegex(js, pattern.getUsername(), ignoreCase),
-      compileRegex(js, pattern.getPassword(), ignoreCase),
-      compileRegex(js, pattern.getHostname(), ignoreCase),
-      compileRegex(js, pattern.getPort(), ignoreCase),
-      compileRegex(js, pattern.getPathname(), ignoreCase),
-      compileRegex(js, pattern.getSearch(), ignoreCase),
-      compileRegex(js, pattern.getHash(), ignoreCase));
+
+  // Might look a bit confusing here. The URL_PATTERN_COMPONENTS macro
+  // is used also to define the constructor for URLPattern so to make
+  // sure things line up right we reuse that pattern here also. Because
+  // we are moving the pattern into the constructor, we need to make sure
+  // the regex patterns are compiled first so we use the macro twice.
+#define V(Name, var) auto var = compileRegex(js, pattern.get##Name(), ignoreCase);
+  URL_PATTERN_COMPONENTS(V)
+#undef V
+
+#define V(_, var) , kj::mv(var)
+  return jsg::alloc<URLPattern>(kj::mv(pattern)
+                                URL_PATTERN_COMPONENTS(V));
+#undef V
 }
 
 kj::Maybe<URLPattern::URLPatternComponentResult> execRegex(

@@ -183,10 +183,10 @@ jsg::Ref<Socket> connectImplNoOutputLock(
       // We need just the hostname part of the address, i.e. we want to strip out the port.
       // We do this using the standard URL parser since it will handle IPv6 for us as well.
       auto input = kj::str("fake://", str);
-      auto record = JSG_REQUIRE_NONNULL(jsg::Url::tryParse(input.asPtr()),
+      auto url = JSG_REQUIRE_NONNULL(jsg::Url::tryParse(input.asPtr()),
           TypeError, "Specified address could not be parsed.");
-      auto host = record.getHostname();
-      auto port = record.getPort();
+      auto host = url.getHostname();
+      auto port = url.getPort();
       JSG_REQUIRE(host != ""_kj, TypeError, "Specified address is missing hostname.");
       JSG_REQUIRE(port != ""_kj, TypeError, "Specified address is missing port.");
       isDefaultFetchPort = port == "443"_kj || port == "80"_kj;

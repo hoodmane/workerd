@@ -147,7 +147,7 @@ jsg::UrlSearchParams initSearchParams(const URLSearchParams::Initializer& init) 
 jsg::UrlSearchParams initFromSearch(kj::Maybe<kj::ArrayPtr<const char>>& maybeQuery) {
   KJ_IF_SOME(query, maybeQuery) {
     return JSG_REQUIRE_NONNULL(jsg::UrlSearchParams::tryParse(query), TypeError,
-                               "Invalud URL search params string.");
+                               "Invalid URL search params string.");
   }
   return jsg::UrlSearchParams();
 }
