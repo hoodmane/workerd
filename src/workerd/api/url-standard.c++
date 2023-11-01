@@ -277,11 +277,7 @@ void URLSearchParams::forEach(
     }
   }
   callback.setReceiver(js.v8Ref<v8::Value>(receiver));
-  // On each iteration of the for loop, a JavaScript callback is invoked. If a new
-  // item is appended to the URLSearchParams within that function, the loop must pick
-  // it up. Using the classic for (;;) syntax here allows for that. However, this does
-  // mean that it's possible for a user to trigger an infinite loop here if new items
-  // are added to the search params unconditionally on each iteration.
+
   auto entries = inner.getEntries();
   while (entries.hasNext()) {
     auto next = KJ_ASSERT_NONNULL(entries.next());

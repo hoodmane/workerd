@@ -188,7 +188,7 @@ inline kj::String KJ_STRINGIFY(const UrlSearchParams& searchParams) {
 // @see https://wicg.github.io/urlpattern
 class UrlPattern final {
 public:
-  // If the value it T, the operation is successful.
+  // If the value is T, the operation is successful.
   // If the value is kj::String, that's an Error message.
   template <typename T>
   using Result = kj::OneOf<T, kj::String>;
