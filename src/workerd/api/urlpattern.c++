@@ -214,8 +214,7 @@ kj::Maybe<URLPattern::URLPatternResult> URLPattern::exec(
         .hash = i.hash.map([](kj::String& str) { return kj::str(str); }),
         .baseURL = i.baseURL.map([](kj::String& str) { return kj::str(str); }),
       });
-      // The URLPattern specification explicitly says to catch any exceptions
-      // thrown here and return null instead of throwing.
+
       jsg::UrlPattern::Init init = {
         .protocol = kj::mv(i.protocol),
         .username = kj::mv(i.username),
