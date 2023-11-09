@@ -49,14 +49,13 @@ jsg::Value WorkerRpc::handleRpcResponse(jsg::Lock& js, WorkerRpc::ResponseAndRes
 
   auto serializedResult = rpcResult.getResult().getV8Serialized();
   auto deserialized = jsg::deserializeV8Rpc(js, kj::heapArray(serializedResult.asBytes()));
-  KJ_REQUIRE(customEvent.outcome == EventOutcome::OK, "got unexpected event outcome for WorkerRpc");
-
-  // TODO(now): Need to think about how we handle returning vs. throwing error from remote.
-  if (deserialized.isNativeError()) {
-    JSG_FAIL_REQUIRE(Error, deserialized.toString(js));
-  } else {
-    return jsg::Value(js.v8Isolate, kj::mv(deserialized));
+  if (customEvent.outcome == EventOutcome::EXCEPTION) {
+    // The remote Worker threw an exception, so we should throw on the client side too.
+    js.throwException(deserialized);
   }
+
+  KJ_REQUIRE(customEvent.outcome == EventOutcome::OK, "got unexpected event outcome for WorkerRpc");
+  return jsg::Value(js.v8Isolate, kj::mv(deserialized));
 }
 
 kj::Maybe<jsg::JsValue> WorkerRpc::getNamed(jsg::Lock& js, kj::StringPtr name) {
@@ -80,7 +79,7 @@ kj::Maybe<jsg::JsValue> WorkerRpc::getNamed(jsg::Lock& js, kj::StringPtr name) {
 class JsRpcTargetImpl final : public rpc::JsRpcTarget::Server {
 public:
   JsRpcTargetImpl(
-      kj::Own<kj::PromiseFulfiller<void>> callFulfiller,
+      kj::Own<kj::PromiseFulfiller<bool>> callFulfiller,
       IoContext& ctx,
       kj::Maybe<kj::StringPtr> entrypointName)
       : callFulfiller(kj::mv(callFulfiller)), ctx(ctx), entrypointName(entrypointName) {}
@@ -90,12 +89,16 @@ public:
     auto methodName = kj::heapString(callContext.getParams().getMethodName());
     auto serializedArgs = callContext.getParams().getSerializedArgs().getV8Serialized().asBytes();
 
+    // Did we throw an exception?
+    bool exceptionThrown = false;
+
     // Try to execute the requested method.
     try {
       co_await ctx.run(
           [this,
           methodName=kj::mv(methodName),
           serializedArgs = kj::mv(serializedArgs),
+          &exceptionThrown,
           entrypointName = entrypointName,
           &callContext] (Worker::Lock& lock) -> kj::Promise<void> {
 
@@ -138,18 +141,22 @@ public:
 
             // We can't co_await a jsg::Promise, so we will use a promise-fulfiller pair instead.
             auto [promise, fulfiller] = kj::newPromiseAndFulfiller<void>();
-            jsProm.then(js, [&reader, fulfiller=kj::mv(fulfiller)]
+            jsProm.then(js, [this, &exceptionThrown, &reader, fulfiller=kj::mv(fulfiller)]
                 (jsg::Lock& lock, jsg::Value value) mutable {
               auto jsVal = jsg::JsValue(value.getHandle(lock));
-              reader.setV8Serialized(jsg::serializeV8Rpc(lock, kj::mv(jsVal)));
+              auto [data, err] = serialize(lock, jsVal.addRef(lock).getHandle(lock));
+              exceptionThrown = err;
+              reader.setV8Serialized(kj::mv(data));
               fulfiller->fulfill();
             });
             // Wait on the kj::Promise, which will resolve once the JS promise has resolved.
             co_await promise;
           } else {
             // We already have the result, set the rpc call response.
-            auto jsValue = jsg::JsValue(result);
-            reader.setV8Serialized(jsg::serializeV8Rpc(js, kj::mv(jsValue)));
+            auto jsVal = jsg::JsValue(result);
+            auto [data, err] = serialize(js, jsVal.addRef(js).getHandle(js));
+            exceptionThrown = err;
+            reader.setV8Serialized(kj::mv(data));
           }
         }
       });
@@ -160,7 +167,7 @@ public:
       }
     }
     // Upon returning, we want to fulfill the callPromise so customEvent can continue executing.
-    KJ_DEFER(callFulfiller->fulfill(););
+    KJ_DEFER(callFulfiller->fulfill(kj::mv(exceptionThrown)););
     co_return;
 
   }
@@ -168,7 +175,36 @@ public:
   KJ_DISALLOW_COPY_AND_MOVE(JsRpcTargetImpl);
 
 private:
-  kj::Own<kj::PromiseFulfiller<void>> callFulfiller;
+  // Serializing may throw if the data we are serializing is not structured-cloneable.
+  // In this case, we will just serialize the exception message and set `sawException`.
+  struct SerializationResult {
+    kj::Array<kj::byte> data;
+    bool sawException;
+  };
+
+  // Serializes the return value of our method.
+  SerializationResult serialize(jsg::Lock& js, jsg::JsValue value) {
+    kj::Maybe<SerializationResult> result;
+
+    // TODO(now): Figure out why `exception` is always empty.
+    js.tryCatch([&] {
+      auto ser = jsg::serializeV8Rpc(js, value.addRef(js).getHandle(js));
+      // Serialized okay!
+      result = SerializationResult { .data = kj::mv(ser), .sawException = false };
+    }, [this, &js, &result](jsg::Value exception) {
+      // Failed to serialize data.
+      auto jsVal = jsg::JsValue(exception.getHandle(js));
+      auto error = serialize(js, js.error(jsVal.toString(js)));
+      // We need to set the exception to true, since the call to `serialize()` above will succeed.
+      error.sawException = true;
+      result = kj::mv(error);
+    });
+    return kj::mv(KJ_REQUIRE_NONNULL(result));
+  }
+
+  // We use the callFulfiller to let the custom event know we've finished executing the method,
+  // but it also signals whether the call completed succesfully or if it failed (exception thrown).
+  kj::Own<kj::PromiseFulfiller<bool>> callFulfiller;
   IoContext& ctx;
   kj::Maybe<kj::StringPtr> entrypointName;
 };
@@ -180,16 +216,23 @@ kj::Promise<WorkerInterface::CustomEvent::Result> GetJsRpcTargetCustomEventImpl:
     kj::Own<IoContext::IncomingRequest> incomingRequest,
     kj::Maybe<kj::StringPtr> entrypointName) {
   incomingRequest->delivered();
-  auto [callPromise, callFulfiller] = kj::newPromiseAndFulfiller<void>();
+  auto [callPromise, callFulfiller] = kj::newPromiseAndFulfiller<bool>();
   capFulfiller->fulfill(kj::heap<JsRpcTargetImpl>(
       kj::mv(callFulfiller), incomingRequest->getContext(), entrypointName));
 
   // `callPromise` resolves once `JsRpcTargetImpl::call()` (invoked by client) completes.
-  co_await callPromise;
+  auto failed = co_await callPromise;
   co_await incomingRequest->drain();
 
+  EventOutcome outcome = EventOutcome::OK;
+  if (failed) {
+    // We threw at some point while executing the method, so we must signal to the client
+    // that it should throw whatever result it receives.
+    outcome = EventOutcome::EXCEPTION;
+  }
+
   co_return WorkerInterface::CustomEvent::Result {
-    .outcome = EventOutcome::OK
+    .outcome = kj::mv(outcome)
   };
 }
 
@@ -200,9 +243,12 @@ kj::Promise<WorkerInterface::CustomEvent::Result>
     kj::TaskSet& waitUntilTasks,
     rpc::EventDispatcher::Client dispatcher) {
   auto req = dispatcher.getJsRpcTargetRequest();
-  this->capFulfiller->fulfill(req.send().getServer());
-  return WorkerInterface::CustomEvent::Result {
-    .outcome = EventOutcome::OK
+  auto sent = req.send();
+  this->capFulfiller->fulfill(sent.getServer());
+
+  auto resp = co_await sent;
+  co_return WorkerInterface::CustomEvent::Result {
+    .outcome = resp.getOutcome()
   };
 }
 }; // namespace workerd::api
