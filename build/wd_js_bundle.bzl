@@ -57,6 +57,10 @@ def _gen_api_bundle_capnpn_impl(ctx):
         _render_module(ctx.attr.internal_wasm_modules[m], m.label,  "wasm", "internal")
         for m in ctx.attr.internal_wasm_modules
     ]
+    modules += [
+        _render_module(ctx.attr.internal_data_modules[m], m.label, "internalData")
+        for m in ctx.attr.internal_data_modules
+    ]
 
     content = CAPNP_TEMPLATE.format(
         schema_id = ctx.attr.schema_id,
@@ -73,6 +77,7 @@ gen_api_bundle_capnpn = rule(
         "builtin_modules": attr.label_keyed_string_dict(allow_files = True),
         "internal_modules": attr.label_keyed_string_dict(allow_files = True),
         "internal_wasm_modules": attr.label_keyed_string_dict(allow_files = True),
+        "internal_data_modules": attr.label_keyed_string_dict(allow_files = True),
         "declarations": attr.string_dict(),
         "data": attr.label_list(allow_files = True),
         "const_name": attr.string(mandatory = True),
@@ -108,9 +113,9 @@ def wd_js_bundle(
         builtin_modules = {},
         internal_modules = {},
         internal_wasm_modules = {},
+        internal_data_modules = {},
         declarations = [],
-        **kwargs
-):
+        **kwargs):
     """Generate cc capnp library with js api bundle.
 
     NOTE: Due to capnpc embed limitation all modules must be in the same or sub directory of the
@@ -134,11 +139,15 @@ def wd_js_bundle(
     internal_wasm_modules, internal_wasm_declarations = _copy_modules(
         internal_wasm_modules, declarations
     )
+    internal_data_modules, _ = _copy_modules(
+        internal_data_modules, {}
+    )
 
     data = (
         list(builtin_modules)
         + list(internal_modules)
         + list(internal_wasm_modules)
+        + list(internal_data_modules)
         + list(builtin_declarations.values())
         + list(internal_declarations.values())
         + list(internal_wasm_declarations.values())
@@ -152,6 +161,7 @@ def wd_js_bundle(
         builtin_modules = builtin_modules,
         internal_modules = internal_modules,
         internal_wasm_modules = internal_wasm_modules,
+        internal_data_modules = internal_data_modules,
         declarations = builtin_declarations | internal_declarations | internal_wasm_declarations,
         data = data,
     )

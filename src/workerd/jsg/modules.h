@@ -6,6 +6,7 @@
 
 #include <kj/filesystem.h>
 #include <kj/map.h>
+#include <workerd/jsg/buffersource.h>
 #include <workerd/jsg/modules.capnp.h>
 #include <workerd/util/thread-scopes.h>
 #include <workerd/jsg/observer.h>
@@ -423,6 +424,32 @@ public:
                   specifier,
                   kj::none,
                   jsg::ModuleRegistry::WasmModuleInfo(lock, wasmModule));
+          }, type);
+          continue;
+        }
+        if (module.which() == Module::DATA) {
+          KJ_ASSERT(server::Autogate::isEnabled(server::AutogateKey::BUILTIN_WASM));
+          addBuiltinModule(specifier, [specifier, sourceCode, this](Lock& lock) {
+            auto value = kj::heapArray(sourceCode.asBytes());
+            v8::Local<v8::ArrayBuffer> data;
+            {
+              // Code duplicated from ArrayBufferWrapper::wrap in value.h because I
+              // couldn't figure out how to use ArrayBufferWrapper directly.
+              // TODO: Avoid code duplication
+              byte* begin = value.begin();
+              size_t size = value.size();
+              auto ownerPtr = new kj::Array<byte>(kj::mv(value));
+
+              std::unique_ptr<v8::BackingStore> backing =
+                  v8::ArrayBuffer::NewBackingStore(begin, size,
+                      [](void* begin, size_t size, void* ownerPtr){
+                        delete reinterpret_cast<kj::Array<byte>*>(ownerPtr);
+                      }, ownerPtr);
+              data = v8::ArrayBuffer::New(lock.v8Isolate, kj::mv(backing));
+            }
+
+            return jsg::ModuleRegistry::ModuleInfo(lock, specifier, kj::none,
+                                                  jsg::ModuleRegistry::DataModuleInfo(lock, data));
           }, type);
           continue;
         }
