@@ -100,6 +100,7 @@ def wd_ts_bundle(
         ),
         declarations = declarations,
         schema_id = schema_id,
+        deps=deps
     )
 
     if lint:

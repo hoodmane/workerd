@@ -1,7 +1,11 @@
+import {WebAssembly} from "pyodide-internal:webassembly_wrapper";
+
+console.log("trivial module", new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0,0,0])));
+
 
 var Module = (() => {
   var _scriptDir = import.meta.url;
-  
+
   return (
 async function(moduleArg = {}) {
 
@@ -532,7 +536,7 @@ function initRuntime() {
 
   checkStackCookie();
 
-  
+
 if (!Module["noFSInit"] && !FS.init.initialized)
   FS.init();
 FS.ignorePermissions = false;
@@ -545,7 +549,7 @@ PIPEFS.root = FS.mount(PIPEFS, {}, null);
 
 function preMain() {
   checkStackCookie();
-  
+
   callRuntimeCallbacks(__ATMAIN__);
 }
 
@@ -852,7 +856,7 @@ function createWasm() {
     var exports = instance.exports;
 
     wasmExports = exports;
-    
+
 
     wasmMemory = wasmExports['memory'];
     Module['wasmMemory'] = wasmMemory;
@@ -864,7 +868,7 @@ function createWasm() {
     updateMemoryViews();
 
     wasmTable = wasmExports['__indirect_function_table'];
-    
+
     assert(wasmTable, "table not found in wasm exports");
 
     addOnInit(wasmExports['__wasm_call_ctors']);
@@ -1014,9 +1018,9 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  8770913: () => { throw new Error("intentionally triggered fatal error!"); },  
- 8770970: ($0) => { Hiwire.get_value($0)() },  
- 8770993: () => { wasmImports["open64"] = wasmImports["open"]; },  
+  8770913: () => { throw new Error("intentionally triggered fatal error!"); },
+ 8770970: ($0) => { Hiwire.get_value($0)() },
+ 8770993: () => { wasmImports["open64"] = wasmImports["open"]; },
  8771042: ($0) => { API._pyodide = Hiwire.pop_value($0); }
 };
 function descr_set_trampoline_call(set,obj,value,closure) { return wasmTable.get(set)(obj, value, closure); }
@@ -1272,7 +1276,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
     };
 
-  
+
     /**
      * @param {number} ptr
      * @param {string} type
@@ -1299,7 +1303,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       return '0x' + ptr.toString(16).padStart(8, '0');
     };
 
-  
+
     /**
      * @param {number} ptr
      * @param {number} value
@@ -1330,7 +1334,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
     };
 
   var UTF8Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder('utf8') : undefined;
-  
+
     /**
      * Given a pointer 'idx' to a null-terminated UTF8-encoded string in the given
      * array that contains uint8 values, returns a copy of that string as a
@@ -1349,7 +1353,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // (As a tiny code save trick, compare endPtr against endIdx using a negation,
       // so that undefined means Infinity)
       while (heapOrArray[endPtr] && !(endPtr >= endIdx)) ++endPtr;
-  
+
       if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
         return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
       }
@@ -1372,7 +1376,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           if ((u0 & 0xF8) != 0xF0) warnOnce('Invalid UTF-8 leading byte ' + ptrToString(u0) + ' encountered when deserializing a UTF-8 string in wasm memory to a JS string!');
           u0 = ((u0 & 7) << 18) | (u1 << 12) | (u2 << 6) | (heapOrArray[idx++] & 63);
         }
-  
+
         if (u0 < 0x10000) {
           str += String.fromCharCode(u0);
         } else {
@@ -1382,7 +1386,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return str;
     };
-  
+
     /**
      * Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the
      * emscripten HEAP, returns a copy of that string as a Javascript String object.
@@ -1500,7 +1504,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         return PATH.normalize(l + '/' + r);
       },
   };
-  
+
   var initRandomFill = () => {
       if (typeof crypto == 'object' && typeof crypto['getRandomValues'] == 'function') {
         // for modern web browsers
@@ -1533,9 +1537,9 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // Lazily init on the first invocation.
       return (randomFill = initRandomFill())(view);
     };
-  
-  
-  
+
+
+
   var PATH_FS = {
   resolve:function() {
         var resolvedPath = '',
@@ -1589,11 +1593,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         return outputParts.join('/');
       },
   };
-  
-  
-  
+
+
+
   var FS_stdin_getChar_buffer = [];
-  
+
   var lengthBytesUTF8 = (str) => {
       var len = 0;
       for (var i = 0; i < str.length; ++i) {
@@ -1614,14 +1618,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return len;
     };
-  
+
   var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       assert(typeof str === 'string');
       // Parameter maxBytesToWrite is not optional. Negative values, 0, null,
       // undefined and false each don't write out any bytes.
       if (!(maxBytesToWrite > 0))
         return 0;
-  
+
       var startIdx = outIdx;
       var endIdx = outIdx + maxBytesToWrite - 1; // -1 for string null terminator.
       for (var i = 0; i < str.length; ++i) {
@@ -1678,7 +1682,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           var BUFSIZE = 256;
           var buf = Buffer.alloc(BUFSIZE);
           var bytesRead = 0;
-  
+
           // For some reason we must suppress a closure warning here, even though
           // fd definitely exists on process.stdin, and is even the proper way to
           // get the fd of stdin,
@@ -1687,7 +1691,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           // so it is related to the surrounding code in some unclear manner.
           /** @suppress {missingProperties} */
           var fd = process.stdin.fd;
-  
+
           try {
             bytesRead = fs.readSync(fd, buf);
           } catch(e) {
@@ -1696,7 +1700,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             if (e.toString().includes('EOF')) bytesRead = 0;
             else throw e;
           }
-  
+
           if (bytesRead > 0) {
             result = buf.slice(0, bytesRead).toString('utf-8');
           } else {
@@ -1865,13 +1869,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         },
   },
   };
-  
-  
+
+
   var zeroMemory = (address, size) => {
       HEAPU8.fill(0, address, address + size);
       return address;
     };
-  
+
   var alignMemory = (size, alignment) => {
       assert(alignment, "alignment argument is required");
       return Math.ceil(size / alignment) * alignment;
@@ -1953,7 +1957,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           // When the byte data of the file is populated, this will point to either a typed array, or a normal JS array. Typed arrays are preferred
           // for performance, and used by default. However, typed arrays are not resizable like normal JS arrays are, so there is a small disk size
           // penalty involved for appending file writes that continuously grow a file similar to std::vector capacity vs used -scheme.
-          node.contents = null; 
+          node.contents = null;
         } else if (FS.isLink(node.mode)) {
           node.node_ops = MEMFS.ops_table.link.node;
           node.stream_ops = MEMFS.ops_table.link.stream;
@@ -2119,11 +2123,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   write(stream, buffer, offset, length, position, canOwn) {
           // The data buffer should be a typed array view
           assert(!(buffer instanceof ArrayBuffer));
-  
+
           if (!length) return 0;
           var node = stream.node;
           node.timestamp = Date.now();
-  
+
           if (buffer.subarray && (!node.contents || node.contents.subarray)) { // This write is from a typed array to a typed array?
             if (canOwn) {
               assert(position === 0, 'canOwn must imply no weird position inside the file');
@@ -2139,7 +2143,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               return length;
             }
           }
-  
+
           // Appending to an existing file and we need to reallocate, or source data did not come as a typed array.
           MEMFS.expandFileStorage(node, position+length);
           if (node.contents.subarray && buffer.subarray) {
@@ -2209,7 +2213,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         },
   },
   };
-  
+
   /** @param {boolean=} noRunDep */
   var asyncLoad = (url, onload, onerror, noRunDep) => {
       var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : '';
@@ -2226,13 +2230,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       });
       if (dep) addRunDependency(dep);
     };
-  
-  
+
+
   var preloadPlugins = Module['preloadPlugins'] || [];
   var FS_handledByPreloadPlugin = (byteArray, fullname, finish, onerror) => {
       // Ensure plugins are ready.
       if (typeof Browser != 'undefined') Browser.init();
-  
+
       var handled = false;
       preloadPlugins.forEach((plugin) => {
         if (handled) return;
@@ -2272,7 +2276,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         processData(url);
       }
     };
-  
+
   var FS_modeStringToFlags = (str) => {
       var flagModes = {
         'r': 0,
@@ -2288,22 +2292,22 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return flags;
     };
-  
+
   var FS_getMode = (canRead, canWrite) => {
       var mode = 0;
       if (canRead) mode |= 292 | 73;
       if (canWrite) mode |= 146;
       return mode;
     };
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
   var ERRNO_CODES = {
   };
-  
+
   var NODEFS = {
   isWindows:false,
   staticInit() {
@@ -2579,20 +2583,20 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               }
             }
           }
-  
+
           if (position < 0) {
             throw new FS.ErrnoError(28);
           }
-  
+
           return position;
         },
   mmap(stream, length, position, prot, flags) {
           if (!FS.isFile(stream.node.mode)) {
             throw new FS.ErrnoError(43);
           }
-  
+
           var ptr = mmapAlloc(length);
-  
+
           NODEFS.stream_ops.read(stream, HEAP8, ptr, length, position);
           return { ptr, allocated: true };
         },
@@ -2603,7 +2607,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         },
   },
   };
-  
+
   var ERRNO_MESSAGES = {
   0:"Success",
   1:"Arg list too long",
@@ -2725,8 +2729,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   148:"No medium (in tape drive)",
   156:"Level 2 not synchronized",
   };
-  
-  
+
+
   var demangle = (func) => {
       warnOnce('warning: build with -sDEMANGLE_SUPPORT to link in libcxxabi demangling');
       return func;
@@ -2740,8 +2744,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           return x === y ? x : (y + ' [' + x + ']');
         });
     };
-  
-  
+
+
   var LZ4 = {
   DIR_MODE:16895,
   FILE_MODE:33279,
@@ -2752,22 +2756,22 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         LZ4.codec = (function() {
           /*
   MiniLZ4: Minimal LZ4 block decoding and encoding.
-  
+
   based off of node-lz4, https://github.com/pierrec/node-lz4
-  
+
   ====
   Copyright (c) 2012 Pierre Curto
-  
+
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
   in the Software without restriction, including without limitation the rights
   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   copies of the Software, and to permit persons to whom the Software is
   furnished to do so, subject to the following conditions:
-  
+
   The above copyright notice and this permission notice shall be included in
   all copies or substantial portions of the Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -2776,16 +2780,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
   ====
-  
+
   changes have the same license
   */
-  
+
   var MiniLZ4 = (function() {
-  
+
   var exports = {};
-  
+
   /**
-   * Decode a block. Assumptions: input contains all sequences of a 
+   * Decode a block. Assumptions: input contains all sequences of a
    * chunk, output is large enough to receive the decoded data.
    * If the output buffer is too small, an error will be thrown.
    * If the returned value is negative, an error occured at the returned offset.
@@ -2803,7 +2807,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   	// Process each sequence in the incoming data
   	for (var i = sIdx, n = eIdx, j = 0; i < n;) {
   		var token = input[i++]
-  
+
   		// Literals
   		var literals_length = (token >> 4)
   		if (literals_length > 0) {
@@ -2813,23 +2817,23 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   				l = input[i++]
   				literals_length += l
   			}
-  
+
   			// Copy the literals
   			var end = i + literals_length
   			while (i < end) output[j++] = input[i++]
-  
+
   			// End of buffer?
   			if (i === n) return j
   		}
-  
+
   		// Match copy
   		// 2 bytes offset (little endian)
   		var offset = input[i++] | (input[i++] << 8)
-  
+
   		// XXX 0 is an invalid offset value
   		if (offset === 0) return j
   		if (offset > j) return -(i-2)
-  
+
   		// length of match copy
   		var match_length = (token & 0xf)
   		var l = match_length + 240
@@ -2837,16 +2841,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   			l = input[i++]
   			match_length += l
   		}
-  
+
   		// Copy the match
   		var pos = j - offset // position of the match copy in the current output
   		var end = j + match_length + 4 // minmatch = 4
   		while (j < end) output[j++] = output[pos++]
   	}
-  
+
   	return j
   }
-  
+
   var
   	maxInputSize	= 0x7E000000
   ,	minMatch		= 4
@@ -2854,57 +2858,57 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   ,	hashLog			= 16
   ,	hashShift		= (minMatch * 8) - hashLog
   ,	hashSize		= 1 << hashLog
-  
+
   ,	copyLength		= 8
   ,	lastLiterals	= 5
   ,	mfLimit			= copyLength + minMatch
   ,	skipStrength	= 6
-  
+
   ,	mlBits  		= 4
   ,	mlMask  		= (1 << mlBits) - 1
   ,	runBits 		= 8 - mlBits
   ,	runMask 		= (1 << runBits) - 1
-  
+
   ,	hasher 			= /* XXX uint32( */ 2654435761 /* ) */
-  
+
   assert(hashShift === 16);
   var hashTable = new Int16Array(1<<16);
   var empty = new Int16Array(hashTable.length);
-  
+
   // CompressBound returns the maximum length of a lz4 block, given it's uncompressed length
   exports.compressBound = function (isize) {
   	return isize > maxInputSize
   		? 0
   		: (isize + (isize/255) + 16) | 0
   }
-  
+
   /** @param {number=} sIdx
   	@param {number=} eIdx */
   exports.compress = function (src, dst, sIdx, eIdx) {
   	hashTable.set(empty);
   	return compressBlock(src, dst, 0, sIdx || 0, eIdx || dst.length)
   }
-  
+
   function compressBlock (src, dst, pos, sIdx, eIdx) {
   	// XXX var Hash = uint32() // Reusable unsigned 32 bits integer
   	var dpos = sIdx
   	var dlen = eIdx - sIdx
   	var anchor = 0
-  
+
   	if (src.length >= maxInputSize) throw new Error("input too large")
-  
+
   	// Minimum of input bytes for compression (LZ4 specs)
   	if (src.length > mfLimit) {
   		var n = exports.compressBound(src.length)
   		if ( dlen < n ) throw Error("output too small: " + dlen + " < " + n)
-  
-  		var 
+
+  		var
   			step  = 1
   		,	findMatchAttempts = (1 << skipStrength) + 3
   		// Keep last few bytes incompressible (LZ4 specs):
   		// last 5 bytes must be literals
   		,	srcLength = src.length - mfLimit
-  
+
   		while (pos + minMatch < srcLength) {
   			// Find a match
   			// min match of 4 bytes aka sequence
@@ -2923,7 +2927,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   			var ref = hashTable[hash] - 1
   			// save position of current sequence in hash table
   			hashTable[hash] = pos + 1
-  
+
   			// first reference or within 64k limit or current sequence !== hashed one: no match
   			if ( ref < 0 ||
   				((pos - ref) >>> 16) > 0 ||
@@ -2937,30 +2941,30 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   				pos += step
   				continue
   			}
-  
+
   			findMatchAttempts = (1 << skipStrength) + 3
-  
+
   			// got a match
   			var literals_length = pos - anchor
   			var offset = pos - ref
-  
+
   			// minMatch already verified
   			pos += minMatch
   			ref += minMatch
-  
+
   			// move to the end of the match (>=minMatch)
   			var match_length = pos
   			while (pos < srcLength && src[pos] == src[ref]) {
   				pos++
   				ref++
   			}
-  
+
   			// match length
   			match_length = pos - match_length
-  
+
   			// token
   			var token = match_length < mlMask ? match_length : mlMask
-  
+
   			// encode literals length
   			if (literals_length >= runMask) {
   				// add match length to the token
@@ -2973,16 +2977,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   				// add match length to the token
   				dst[dpos++] = (literals_length << mlBits) + token
   			}
-  
+
   			// write literals
   			for (var i = 0; i < literals_length; i++) {
   				dst[dpos++] = src[anchor+i]
   			}
-  
+
   			// encode offset
   			dst[dpos++] = offset
   			dst[dpos++] = (offset >> 8)
-  
+
   			// encode match length
   			if (match_length >= mlMask) {
   				match_length -= mlMask
@@ -2990,17 +2994,17 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   					match_length -= 255
   					dst[dpos++] = 255
   				}
-  
+
   				dst[dpos++] = match_length
   			}
-  
+
   			anchor = pos
   		}
   	}
-  
+
   	// cannot compress input
   	if (anchor == 0) return 0
-  
+
   	// Write last literals
   	// encode literals length
   	literals_length = src.length - anchor
@@ -3015,18 +3019,18 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   		// add match length to the token
   		dst[dpos++] = (literals_length << mlBits)
   	}
-  
+
   	// write literals
   	pos = anchor
   	while (pos < src.length) {
   		dst[dpos++] = src[pos++]
   	}
-  
+
   	return dpos
   }
-  
+
   exports.CHUNK_SIZE = 2048; // musl libc does readaheads of 1024 bytes, so a multiple of that is a good idea
-  
+
   exports.compressPackage = function(data, verify) {
     if (verify) {
       var temp = new Uint8Array(exports.CHUNK_SIZE);
@@ -3088,13 +3092,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
     assert(offset === total);
     return compressedData;
   };
-  
+
   assert(exports.CHUNK_SIZE < (1 << 15)); // we use 16-bit ints as the type of the hash table, chunk size must be smaller
-  
+
   return exports;
-  
+
   })();
-  
+
   ;
           return MiniLZ4;
         })();
@@ -3298,43 +3302,43 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   syncFSRequests:0,
   lookupPath(path, opts = {}) {
         path = PATH_FS.resolve(path);
-  
+
         if (!path) return { path: '', node: null };
-  
+
         var defaults = {
           follow_mount: true,
           recurse_count: 0
         };
         opts = Object.assign(defaults, opts)
-  
+
         if (opts.recurse_count > 8) {  // max recursive lookup of 8
           throw new FS.ErrnoError(32);
         }
-  
+
         // split the absolute path
         var parts = path.split('/').filter((p) => !!p);
-  
+
         // start at the root
         var current = FS.root;
         var current_path = '/';
-  
+
         for (var i = 0; i < parts.length; i++) {
           var islast = (i === parts.length-1);
           if (islast && opts.parent) {
             // stop resolving
             break;
           }
-  
+
           current = FS.lookupNode(current, parts[i]);
           current_path = PATH.join2(current_path, parts[i]);
-  
+
           // jump to the mount's root node if this is a mountpoint
           if (FS.isMountpoint(current)) {
             if (!islast || (islast && opts.follow_mount)) {
               current = current.mounted.root;
             }
           }
-  
+
           // by default, lookupPath will not follow a symlink if it is the final path component.
           // setting opts.follow = true will override this behavior.
           if (!islast || opts.follow) {
@@ -3342,17 +3346,17 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             while (FS.isLink(current.mode)) {
               var link = FS.readlink(current_path);
               current_path = PATH_FS.resolve(PATH.dirname(current_path), link);
-  
+
               var lookup = FS.lookupPath(current_path, { recurse_count: opts.recurse_count + 1 });
               current = lookup.node;
-  
+
               if (count++ > 40) {  // limit max consecutive symlinks to 40 (SYMLOOP_MAX).
                 throw new FS.ErrnoError(32);
               }
             }
           }
         }
-  
+
         return { path: current_path, node: current };
       },
   getPath(node) {
@@ -3369,7 +3373,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       },
   hashName(parentid, name) {
         var hash = 0;
-  
+
         for (var i = 0; i < name.length; i++) {
           hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
         }
@@ -3413,9 +3417,9 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   createNode(parent, name, mode, rdev) {
         assert(typeof parent == 'object')
         var node = new FS.FSNode(parent, name, mode, rdev);
-  
+
         FS.hashAddNode(node);
-  
+
         return node;
       },
   destroyNode(node) {
@@ -3614,15 +3618,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   getMounts(mount) {
         var mounts = [];
         var check = [mount];
-  
+
         while (check.length) {
           var m = check.pop();
-  
+
           mounts.push(m);
-  
+
           check.push.apply(check, m.mounts);
         }
-  
+
         return mounts;
       },
   syncfs(populate, callback) {
@@ -3630,22 +3634,22 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           callback = populate;
           populate = false;
         }
-  
+
         FS.syncFSRequests++;
-  
+
         if (FS.syncFSRequests > 1) {
           err(`warning: ${FS.syncFSRequests} FS.syncfs operations in flight at once, probably just doing extra work`);
         }
-  
+
         var mounts = FS.getMounts(FS.root.mount);
         var completed = 0;
-  
+
         function doCallback(errCode) {
           assert(FS.syncFSRequests > 0);
           FS.syncFSRequests--;
           return callback(errCode);
         }
-  
+
         function done(errCode) {
           if (errCode) {
             if (!done.errored) {
@@ -3658,7 +3662,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             doCallback(null);
           }
         };
-  
+
         // sync all mounts
         mounts.forEach((mount) => {
           if (!mount.type.syncfs) {
@@ -3676,79 +3680,79 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         var root = mountpoint === '/';
         var pseudo = !mountpoint;
         var node;
-  
+
         if (root && FS.root) {
           throw new FS.ErrnoError(10);
         } else if (!root && !pseudo) {
           var lookup = FS.lookupPath(mountpoint, { follow_mount: false });
-  
+
           mountpoint = lookup.path;  // use the absolute path
           node = lookup.node;
-  
+
           if (FS.isMountpoint(node)) {
             throw new FS.ErrnoError(10);
           }
-  
+
           if (!FS.isDir(node.mode)) {
             throw new FS.ErrnoError(54);
           }
         }
-  
+
         var mount = {
           type,
           opts,
           mountpoint,
           mounts: []
         };
-  
+
         // create a root node for the fs
         var mountRoot = type.mount(mount);
         mountRoot.mount = mount;
         mount.root = mountRoot;
-  
+
         if (root) {
           FS.root = mountRoot;
         } else if (node) {
           // set as a mountpoint
           node.mounted = mount;
-  
+
           // add the new mount to the current mount's children
           if (node.mount) {
             node.mount.mounts.push(mount);
           }
         }
-  
+
         return mountRoot;
       },
   unmount(mountpoint) {
         var lookup = FS.lookupPath(mountpoint, { follow_mount: false });
-  
+
         if (!FS.isMountpoint(lookup.node)) {
           throw new FS.ErrnoError(28);
         }
-  
+
         // destroy the nodes for this mount, and all its child mounts
         var node = lookup.node;
         var mount = node.mounted;
         var mounts = FS.getMounts(mount);
-  
+
         Object.keys(FS.nameTable).forEach((hash) => {
           var current = FS.nameTable[hash];
-  
+
           while (current) {
             var next = current.name_next;
-  
+
             if (mounts.includes(current.mount)) {
               FS.destroyNode(current);
             }
-  
+
             current = next;
           }
         });
-  
+
         // no longer a mountpoint
         node.mounted = null;
-  
+
         // remove this mount from the child mounts
         var idx = node.mount.mounts.indexOf(mount);
         assert(idx !== -1);
@@ -3832,13 +3836,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         var new_name = PATH.basename(new_path);
         // parents must exist
         var lookup, old_dir, new_dir;
-  
+
         // let the errors from non existant directories percolate up
         lookup = FS.lookupPath(old_path, { parent: true });
         old_dir = lookup.node;
         lookup = FS.lookupPath(new_path, { parent: true });
         new_dir = lookup.node;
-  
+
         if (!old_dir || !new_dir) throw new FS.ErrnoError(44);
         // need to be part of the same mount
         if (old_dir.mount !== new_dir.mount) {
@@ -4136,7 +4140,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         }
         // we've already handled these, don't pass down to the underlying vfs
         flags &= ~(128 | 512 | 131072);
-  
+
         // register the stream with the filesystem
         var stream = FS.createStream({
           node,
@@ -4420,7 +4424,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         // TODO deprecate the old functionality of a single
         // input / output callback and that utilizes FS.createDevice
         // and instead require a unique set of stream ops
-  
+
         // by default, we symlink the standard streams to the
         // default tty devices. however, if the standard streams
         // have been overwritten we create a unique device for
@@ -4440,7 +4444,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         } else {
           FS.symlink('/dev/tty1', '/dev/stderr');
         }
-  
+
         // open default streams for the stdin, stdout and stderr devices
         var stdin = FS.open('/dev/stdin', 0);
         var stdout = FS.open('/dev/stdout', 1);
@@ -4471,7 +4475,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           };
           this.setErrno(errno);
           this.message = ERRNO_MESSAGES[errno];
-  
+
           // Try to get a maximally helpful stack trace. On Node.js, getting Error.stack
           // now ensures it shows what we want.
           if (this.stack) {
@@ -4490,15 +4494,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       },
   staticInit() {
         FS.ensureErrnoError();
-  
+
         FS.nameTable = new Array(4096);
-  
+
         FS.mount(MEMFS, {}, '/');
-  
+
         FS.createDefaultDirectories();
         FS.createDefaultDevices();
         FS.createSpecialDirectories();
-  
+
         FS.filesystems = {
           'MEMFS': MEMFS,
           'NODEFS': NODEFS,
@@ -4507,14 +4511,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   init(input, output, error) {
         assert(!FS.init.initialized, 'FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)');
         FS.init.initialized = true;
-  
+
         FS.ensureErrnoError();
-  
+
         // Allow Module.stdin etc. to provide defaults, if none explicitly passed to us here
         Module['stdin'] = input || Module['stdin'];
         Module['stdout'] = output || Module['stdout'];
         Module['stderr'] = error || Module['stderr'];
-  
+
         FS.createStandardStreams();
       },
   quit() {
@@ -4709,27 +4713,27 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           var header;
           var hasByteServing = (header = xhr.getResponseHeader("Accept-Ranges")) && header === "bytes";
           var usesGzip = (header = xhr.getResponseHeader("Content-Encoding")) && header === "gzip";
-  
+
           var chunkSize = 1024*1024; // Chunk size in bytes
-  
+
           if (!hasByteServing) chunkSize = datalength;
-  
+
           // Function to get a range from the remote URL.
           var doXHR = (from, to) => {
             if (from > to) throw new Error("invalid range (" + from + ", " + to + ") or no bytes requested!");
             if (to > datalength-1) throw new Error("only " + datalength + " bytes available! programmer error!");
-  
+
             // TODO: Use mozResponseArrayBuffer, responseStream, etc. if available.
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url, false);
             if (datalength !== chunkSize) xhr.setRequestHeader("Range", "bytes=" + from + "-" + to);
-  
+
             // Some hints to the browser that we want binary data.
             xhr.responseType = 'arraybuffer';
             if (xhr.overrideMimeType) {
               xhr.overrideMimeType('text/plain; charset=x-user-defined');
             }
-  
+
             xhr.send(null);
             if (!(xhr.status >= 200 && xhr.status < 300 || xhr.status === 304)) throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
             if (xhr.response !== undefined) {
@@ -4748,7 +4752,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             if (typeof lazyArray.chunks[chunkNum] == 'undefined') throw new Error('doXHR failed!');
             return lazyArray.chunks[chunkNum];
           });
-  
+
           if (usesGzip || !datalength) {
             // if the server uses gzip or doesn't supply the length, we have to download the whole file to get the (uncompressed) length
             chunkSize = datalength = 1; // this will force getter(0)/doXHR do download the whole file
@@ -4756,7 +4760,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             chunkSize = datalength;
             out("LazyFiles on gzip forces download of the whole file when length is accessed");
           }
-  
+
           this._length = datalength;
           this._chunkSize = chunkSize;
           this.lengthKnown = true;
@@ -4782,12 +4786,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               }
             }
           });
-  
+
           var properties = { isDevice: false, contents: lazyArray };
         } else {
           var properties = { isDevice: false, url: url };
         }
-  
+
         var node = FS.createFile(parent, name, properties, canRead, canWrite);
         // This is a total hack, but I want to get this lazy file code out of the
         // core of MEMFS. If we want to keep this lazy file concept I feel it should
@@ -4868,7 +4872,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         abort('FS.standardizePath has been removed; use PATH.normalize instead');
       },
   };
-  
+
   var SYSCALLS = {
   DEFAULT_POLLMASK:5,
   calculateAt(dirfd, path, allowEmpty) {
@@ -4952,51 +4956,51 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   };
   function ___syscall__newselect(nfds, readfds, writefds, exceptfds, timeout) {
   try {
-  
+
       // readfds are supported,
       // writefds checks socket open status
       // exceptfds not supported
       // timeout is always 0 - fully async
       assert(nfds <= 64, 'nfds must be less than or equal to 64');  // fd sets have 64 bits // TODO: this could be 1024 based on current musl headers
       assert(!exceptfds, 'exceptfds not supported');
-  
+
       var total = 0;
-  
+
       var srcReadLow = (readfds ? HEAP32[((readfds)>>2)] : 0),
           srcReadHigh = (readfds ? HEAP32[(((readfds)+(4))>>2)] : 0);
       var srcWriteLow = (writefds ? HEAP32[((writefds)>>2)] : 0),
           srcWriteHigh = (writefds ? HEAP32[(((writefds)+(4))>>2)] : 0);
       var srcExceptLow = (exceptfds ? HEAP32[((exceptfds)>>2)] : 0),
           srcExceptHigh = (exceptfds ? HEAP32[(((exceptfds)+(4))>>2)] : 0);
-  
+
       var dstReadLow = 0,
           dstReadHigh = 0;
       var dstWriteLow = 0,
           dstWriteHigh = 0;
       var dstExceptLow = 0,
           dstExceptHigh = 0;
-  
+
       var allLow = (readfds ? HEAP32[((readfds)>>2)] : 0) |
                    (writefds ? HEAP32[((writefds)>>2)] : 0) |
                    (exceptfds ? HEAP32[((exceptfds)>>2)] : 0);
       var allHigh = (readfds ? HEAP32[(((readfds)+(4))>>2)] : 0) |
                     (writefds ? HEAP32[(((writefds)+(4))>>2)] : 0) |
                     (exceptfds ? HEAP32[(((exceptfds)+(4))>>2)] : 0);
-  
+
       var check = function(fd, low, high, val) {
         return (fd < 32 ? (low & val) : (high & val));
       };
-  
+
       for (var fd = 0; fd < nfds; fd++) {
         var mask = 1 << (fd % 32);
         if (!(check(fd, allLow, allHigh, mask))) {
           continue;  // index isn't in the set
         }
-  
+
         var stream = SYSCALLS.getStreamFromFD(fd);
-  
+
         var flags = SYSCALLS.DEFAULT_POLLMASK;
-  
+
         if (stream.stream_ops.poll) {
           var timeoutInMillis = -1;
           if (timeout) {
@@ -5006,7 +5010,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           }
           flags = stream.stream_ops.poll(stream, timeoutInMillis);
         }
-  
+
         if ((flags & 1) && check(fd, srcReadLow, srcReadHigh, mask)) {
           fd < 32 ? (dstReadLow = dstReadLow | mask) : (dstReadHigh = dstReadHigh | mask);
           total++;
@@ -5020,7 +5024,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           total++;
         }
       }
-  
+
       if (readfds) {
         HEAP32[((readfds)>>2)] = dstReadLow;
         HEAP32[(((readfds)+(4))>>2)] = dstReadHigh;
@@ -5033,7 +5037,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         HEAP32[((exceptfds)>>2)] = dstExceptLow;
         HEAP32[(((exceptfds)+(4))>>2)] = dstExceptHigh;
       }
-  
+
       return total;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
@@ -5047,7 +5051,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         // the subprotocol/url) use that, if not initialise it to a new object.
         Module['websocket'] = (Module['websocket'] &&
                                ('object' === typeof Module['websocket'])) ? Module['websocket'] : {};
-  
+
         // Add the Event registration mechanism to the exported websocket configuration
         // object so we can register network callbacks from native JavaScript too.
         // For more documentation see system/include/emscripten/emscripten.h
@@ -5058,15 +5062,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           }
           return this;
         };
-  
+
         Module['websocket'].emit = /** @this{Object} */ function(event, param) {
           if ('function' === typeof this._callbacks[event]) {
             this._callbacks[event].call(this, param);
           }
         };
-  
+
         // If debug is enabled register simple default logging callbacks for each Event.
-  
+
         return FS.createNode(null, '/', 16384 | 511 /* 0777 */, 0);
       },
   createSocket(family, type, protocol) {
@@ -5075,7 +5079,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         if (streaming && protocol && protocol != 6) {
           throw new FS.ErrnoError(66); // if SOCK_STREAM, must be tcp or 0.
         }
-  
+
         // create our internal socket structure
         var sock = {
           family,
@@ -5088,12 +5092,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           recv_queue: [],
           sock_ops: SOCKFS.websocket_sock_ops
         };
-  
+
         // create the filesystem node to store the socket structure
         var name = SOCKFS.nextname();
         var node = FS.createNode(SOCKFS.root, name, 49152, 0);
         node.sock = sock;
-  
+
         // and the wrapping stream that enables library functions such
         // as read and write to indirectly interact with the socket
         var stream = FS.createStream({
@@ -5103,11 +5107,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           seekable: false,
           stream_ops: SOCKFS.stream_ops
         });
-  
+
         // map the new stream to the socket structure (sockets have a 1:1
         // relationship with a stream)
         sock.stream = stream;
-  
+
         return sock;
       },
   getSocket(fd) {
@@ -5154,13 +5158,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   websocket_sock_ops:{
   createPeer(sock, addr, port) {
           var ws;
-  
+
           if (typeof addr == 'object') {
             ws = addr;
             addr = null;
             port = null;
           }
-  
+
           if (ws) {
             // for sockets that've already connected (e.g. we're the server)
             // we can inspect the _socket property for the address
@@ -5183,48 +5187,48 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             try {
               // runtimeConfig gets set to true if WebSocket runtime configuration is available.
               var runtimeConfig = (Module['websocket'] && ('object' === typeof Module['websocket']));
-  
+
               // The default value is 'ws://' the replace is needed because the compiler replaces '//' comments with '#'
               // comments without checking context, so we'd end up with ws:#, the replace swaps the '#' for '//' again.
               var url = 'ws:#'.replace('#', '//');
-  
+
               if (runtimeConfig) {
                 if ('string' === typeof Module['websocket']['url']) {
                   url = Module['websocket']['url']; // Fetch runtime WebSocket URL config.
                 }
               }
-  
+
               if (url === 'ws://' || url === 'wss://') { // Is the supplied URL config just a prefix, if so complete it.
                 var parts = addr.split('/');
                 url = url + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
               }
-  
+
               // Make the WebSocket subprotocol (Sec-WebSocket-Protocol) default to binary if no configuration is set.
               var subProtocols = 'binary'; // The default value is 'binary'
-  
+
               if (runtimeConfig) {
                 if ('string' === typeof Module['websocket']['subprotocol']) {
                   subProtocols = Module['websocket']['subprotocol']; // Fetch runtime WebSocket subprotocol config.
                 }
               }
-  
+
               // The default WebSocket options
               var opts = undefined;
-  
+
               if (subProtocols !== 'null') {
                 // The regex trims the string (removes spaces at the beginning and end, then splits the string by
                 // <any space>,<any space> into an Array. Whitespace removal is important for Websockify and ws.
                 subProtocols = subProtocols.replace(/^ +| +$/g,"").split(/ *, */);
-  
+
                 opts = subProtocols;
               }
-  
+
               // some webservers (azure) does not support subprotocol header
               if (runtimeConfig && null === Module['websocket']['subprotocol']) {
                 subProtocols = 'null';
                 opts = undefined;
               }
-  
+
               // If node we use the ws library.
               var WebSocketConstructor;
               if (ENVIRONMENT_IS_NODE) {
@@ -5239,17 +5243,17 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               throw new FS.ErrnoError(23);
             }
           }
-  
+
           var peer = {
             addr,
             port,
             socket: ws,
             dgram_send_queue: []
           };
-  
+
           SOCKFS.websocket_sock_ops.addPeer(sock, peer);
           SOCKFS.websocket_sock_ops.handlePeerEvents(sock, peer);
-  
+
           // if this is a bound dgram socket, send the port number first to allow
           // us to override the ephemeral port reported to us by remotePort on the
           // remote end.
@@ -5260,7 +5264,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
                 ((sock.sport & 0xff00) >> 8) , (sock.sport & 0xff)
             ]));
           }
-  
+
           return peer;
         },
   getPeer(sock, addr, port) {
@@ -5274,11 +5278,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         },
   handlePeerEvents(sock, peer) {
           var first = true;
-  
+
           var handleOpen = function () {
-  
+
             Module['websocket'].emit('open', sock.stream.fd);
-  
+
             try {
               var queued = peer.dgram_send_queue.shift();
               while (queued) {
@@ -5291,7 +5295,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               peer.socket.close();
             }
           };
-  
+
           function handleMessage(data) {
             if (typeof data == 'string') {
               var encoder = new TextEncoder(); // should be utf-8
@@ -5306,7 +5310,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               }
               data = new Uint8Array(data); // make a typed array view on the array buffer
             }
-  
+
             // if this is the port message, override the peer's port with it
             var wasfirst = first;
             first = false;
@@ -5321,11 +5325,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               SOCKFS.websocket_sock_ops.addPeer(sock, peer);
               return;
             }
-  
+
             sock.recv_queue.push({ addr: peer.addr, port: peer.port, data: data });
             Module['websocket'].emit('message', sock.stream.fd);
           };
-  
+
           if (ENVIRONMENT_IS_NODE) {
             peer.socket.on('open', handleOpen);
             peer.socket.on('message', function(data, isBinary) {
@@ -5368,29 +5372,29 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             // if there are pending clients.
             return sock.pending.length ? (64 | 1) : 0;
           }
-  
+
           var mask = 0;
           var dest = sock.type === 1 ?  // we only care about the socket state for connection-based sockets
             SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport) :
             null;
-  
+
           if (sock.recv_queue.length ||
               !dest ||  // connection-less sockets are always ready to read
               (dest && dest.socket.readyState === dest.socket.CLOSING) ||
               (dest && dest.socket.readyState === dest.socket.CLOSED)) {  // let recv return 0 once closed
             mask |= (64 | 1);
           }
-  
+
           if (!dest ||  // connection-less sockets are always ready to write
               (dest && dest.socket.readyState === dest.socket.OPEN)) {
             mask |= 4;
           }
-  
+
           if ((dest && dest.socket.readyState === dest.socket.CLOSING) ||
               (dest && dest.socket.readyState === dest.socket.CLOSED)) {
             mask |= 16;
           }
-  
+
           return mask;
         },
   ioctl(sock, request, arg) {
@@ -5456,11 +5460,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           if (sock.server) {
             throw new FS.ErrnoError(138);
           }
-  
+
           // TODO autobind
           // if (!sock.addr && sock.type == 2) {
           // }
-  
+
           // early out if we're already connected / in the middle of connecting
           if (typeof sock.daddr != 'undefined' && typeof sock.dport != 'undefined') {
             var dest = SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
@@ -5472,13 +5476,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               }
             }
           }
-  
+
           // add the socket to our peer list and set our
           // destination address / port to match
           var peer = SOCKFS.websocket_sock_ops.createPeer(sock, addr, port);
           sock.daddr = peer.addr;
           sock.dport = peer.port;
-  
+
           // always "fail" in non-blocking mode
           throw new FS.ErrnoError(26);
         },
@@ -5497,16 +5501,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             // TODO support backlog
           });
           Module['websocket'].emit('listen', sock.stream.fd); // Send Event with listen fd.
-  
+
           sock.server.on('connection', function(ws) {
             if (sock.type === 1) {
               var newsock = SOCKFS.createSocket(sock.family, sock.type, sock.protocol);
-  
+
               // create a peer on the new socket
               var peer = SOCKFS.websocket_sock_ops.createPeer(newsock, ws);
               newsock.daddr = peer.addr;
               newsock.dport = peer.port;
-  
+
               // push to queue for accept to pick up
               sock.pending.push(newsock);
               Module['websocket'].emit('connection', newsock.stream.fd);
@@ -5575,10 +5579,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             addr = sock.daddr;
             port = sock.dport;
           }
-  
+
           // find the peer for the destination address
           var dest = SOCKFS.websocket_sock_ops.getPeer(sock, addr, port);
-  
+
           // early out if not connected with a connection-based socket
           if (sock.type === 1) {
             if (!dest || dest.socket.readyState === dest.socket.CLOSING || dest.socket.readyState === dest.socket.CLOSED) {
@@ -5587,7 +5591,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               throw new FS.ErrnoError(6);
             }
           }
-  
+
           // create a copy of the incoming data to send, as the WebSocket API
           // doesn't work entirely with an ArrayBufferView, it'll just send
           // the entire underlying buffer
@@ -5595,10 +5599,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             offset += buffer.byteOffset;
             buffer = buffer.buffer;
           }
-  
+
           var data;
             data = buffer.slice(offset, offset + length);
-  
+
           // if we're emulating a connection-less dgram socket and don't have
           // a cached connection, queue the buffer to send upon connect and
           // lie, saying the data was sent now.
@@ -5612,7 +5616,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               return length;
             }
           }
-  
+
           try {
             // send the actual data
             dest.socket.send(data);
@@ -5627,12 +5631,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             // tcp servers should not be recv()'ing on the listen socket
             throw new FS.ErrnoError(53);
           }
-  
+
           var queued = sock.recv_queue.shift();
           if (!queued) {
             if (sock.type === 1) {
               var dest = SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport);
-  
+
               if (!dest) {
                 // if we have a destination address but are not connected, error out
                 throw new FS.ErrnoError(53);
@@ -5646,7 +5650,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             }
             throw new FS.ErrnoError(6);
           }
-  
+
           // queued.data will be an ArrayBuffer if it's unadulterated, but if it's
           // requeued TCP data it'll be an ArrayBufferView
           var queuedLength = queued.data.byteLength || queued.data.length;
@@ -5658,25 +5662,25 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             addr: queued.addr,
             port: queued.port
           };
-  
+
           // push back any unread data for TCP connections
           if (sock.type === 1 && bytesRead < queuedLength) {
             var bytesRemaining = queuedLength - bytesRead;
             queued.data = new Uint8Array(queuedBuffer, queuedOffset + bytesRead, bytesRemaining);
             sock.recv_queue.unshift(queued);
           }
-  
+
           return res;
         },
   },
   };
-  
+
   var getSocketFromFD = (fd) => {
       var socket = SOCKFS.getSocket(fd);
       if (!socket) throw new FS.ErrnoError(8);
       return socket;
     };
-  
+
   var setErrNo = (value) => {
       HEAP32[((___errno_location())>>2)] = value;
       return value;
@@ -5697,7 +5701,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   localAddr:4261412874,
   addrPool:[33554442,50331658,67108874,83886090,100663306,117440522,134217738,150994954,167772170,184549386,201326602,218103818,234881034],
   };
-  
+
   var inetPton4 = (str) => {
       var b = str.split('.');
       for (var i = 0; i < 4; i++) {
@@ -5707,8 +5711,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return (b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)) >>> 0;
     };
-  
-  
+
+
   /** @suppress {checkTypes} */
   var jstoi_q = (str) => parseInt(str);
   var inetPton6 = (str) => {
@@ -5729,7 +5733,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       } else {
         str = str.replace("::", ":Z:");
       }
-  
+
       if (str.indexOf(".") > 0) {
         // parse IPv4 embedded stress
         str = str.replace(new RegExp('[.]', 'g'), ":");
@@ -5740,7 +5744,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       } else {
         words = str.split(":");
       }
-  
+
       offset = 0; z = 0;
       for (w=0; w < words.length; w++) {
         if (typeof words[w] == 'string') {
@@ -5766,8 +5770,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         (parts[7] << 16) | parts[6]
       ];
     };
-  
-  
+
+
   /** @param {number=} addrlen */
   var writeSockaddr = (sa, family, addr, port, addrlen) => {
       switch (family) {
@@ -5799,8 +5803,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return 0;
     };
-  
-  
+
+
   var DNS = {
   address_map:{
   id:1,
@@ -5819,36 +5823,36 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         if (res !== null) {
           return name;
         }
-  
+
         // See if this name is already mapped.
         var addr;
-  
+
         if (DNS.address_map.addrs[name]) {
           addr = DNS.address_map.addrs[name];
         } else {
           var id = DNS.address_map.id++;
           assert(id < 65535, 'exceeded max address mappings of 65535');
-  
+
           addr = '172.29.' + (id & 0xff) + '.' + (id & 0xff00);
-  
+
           DNS.address_map.names[addr] = name;
           DNS.address_map.addrs[name] = addr;
         }
-  
+
         return addr;
       },
   lookup_addr(addr) {
         if (DNS.address_map.names[addr]) {
           return DNS.address_map.names[addr];
         }
-  
+
         return null;
       },
   };
-  
+
   function ___syscall_accept4(fd, addr, addrlen, flags, d1, d2) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var newsock = sock.sock_ops.accept(sock);
       if (addr) {
@@ -5862,13 +5866,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
+
+
   var inetNtop4 = (addr) => {
       return (addr & 0xff) + '.' + ((addr >> 8) & 0xff) + '.' + ((addr >> 16) & 0xff) + '.' + ((addr >> 24) & 0xff)
     };
-  
-  
+
+
   var inetNtop6 = (ints) => {
       //  ref:  http://www.ietf.org/rfc/rfc2373.txt - section 2.5.4
       //  Format for IPv4 compatible and mapped  128-bit IPv6 Addresses
@@ -5901,16 +5905,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         ints[3] & 0xffff,
         (ints[3] >> 16)
       ];
-  
+
       // Handle IPv4-compatible, IPv4-mapped, loopback and any/unspecified addresses
-  
+
       var hasipv4 = true;
       var v4part = "";
       // check if the 10 high-order bytes are all zeros (first 5 words)
       for (i = 0; i < 5; i++) {
         if (parts[i] !== 0) { hasipv4 = false; break; }
       }
-  
+
       if (hasipv4) {
         // low-order 32-bits store an IPv4 address (bytes 13 to 16) (last 2 words)
         v4part = inetNtop4(parts[6] | (parts[7] << 16));
@@ -5930,9 +5934,9 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           return str;
         }
       }
-  
+
       // Handle all other IPv6 addresses
-  
+
       // first run to find the longest contiguous zero words
       for (word = 0; word < 8; word++) {
         if (parts[word] === 0) {
@@ -5947,7 +5951,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           zstart = word - longest + 1;
         }
       }
-  
+
       for (word = 0; word < 8; word++) {
         if (longest > 1) {
           // compress contiguous zeros - to produce "::"
@@ -5965,13 +5969,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return str;
     };
-  
+
   var readSockaddr = (sa, salen) => {
       // family / port offsets are common to both sockaddr_in and sockaddr_in6
       var family = HEAP16[((sa)>>1)];
       var port = _ntohs(HEAPU16[(((sa)+(2))>>1)]);
       var addr;
-  
+
       switch (family) {
         case 2:
           if (salen !== 16) {
@@ -5995,11 +5999,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         default:
           return { errno: 5 };
       }
-  
+
       return { family: family, addr: addr, port: port };
     };
-  
-  
+
+
   /** @param {boolean=} allowNull */
   var getSocketAddress = (addrp, addrlen, allowNull) => {
       if (allowNull && addrp === 0) return null;
@@ -6008,10 +6012,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       info.addr = DNS.lookup_addr(info.addr) || info.addr;
       return info;
     };
-  
+
   function ___syscall_bind(fd, addr, addrlen, d1, d2, d3) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var info = getSocketAddress(addr, addrlen);
       sock.sock_ops.bind(sock, info.addr, info.port);
@@ -6024,7 +6028,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_chdir(path) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       FS.chdir(path);
       return 0;
@@ -6036,7 +6040,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_chmod(path, mode) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       FS.chmod(path, mode);
       return 0;
@@ -6046,11 +6050,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
+
+
   function ___syscall_connect(fd, addr, addrlen, d1, d2, d3) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var info = getSocketAddress(addr, addrlen);
       sock.sock_ops.connect(sock, info.addr, info.port);
@@ -6063,7 +6067,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_dup(fd) {
   try {
-  
+
       var old = SYSCALLS.getStreamFromFD(fd);
       return FS.createStream(old).fd;
     } catch (e) {
@@ -6074,7 +6078,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_dup3(fd, newfd, flags) {
   try {
-  
+
       var old = SYSCALLS.getStreamFromFD(fd);
       assert(!flags);
       if (old.fd === newfd) return -28;
@@ -6089,7 +6093,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_faccessat(dirfd, path, amode, flags) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       assert(flags === 0);
       path = SYSCALLS.calculateAt(dirfd, path);
@@ -6122,7 +6126,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_fchdir(fd) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       FS.chdir(stream.path);
       return 0;
@@ -6134,7 +6138,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_fchmod(fd, mode) {
   try {
-  
+
       FS.fchmod(fd, mode);
       return 0;
     } catch (e) {
@@ -6146,7 +6150,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   function ___syscall_fchmodat(dirfd, path, mode, varargs) {
   SYSCALLS.varargs = varargs;
   try {
-  
+
       path = SYSCALLS.getStr(path);
       path = SYSCALLS.calculateAt(dirfd, path);
       FS.chmod(path, mode);
@@ -6159,7 +6163,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_fchown32(fd, owner, group) {
   try {
-  
+
       FS.fchown(fd, owner, group);
       return 0;
     } catch (e) {
@@ -6170,7 +6174,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_fchownat(dirfd, path, owner, group, flags) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       var nofollow = flags & 256;
       flags = flags & (~256);
@@ -6184,11 +6188,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function ___syscall_fcntl64(fd, cmd, varargs) {
   SYSCALLS.varargs = varargs;
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       switch (cmd) {
         case 0: {
@@ -6242,7 +6246,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_fdatasync(fd) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       return 0; // we can't do anything synchronously; the in-memory FS is already synced to
     } catch (e) {
@@ -6253,7 +6257,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_fstat64(fd, buf) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       return SYSCALLS.doStat(FS.stat, stream.path, buf);
     } catch (e) {
@@ -6264,7 +6268,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_statfs64(path, size, buf) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       assert(size === 64);
       // NOTE: None of the constants here are true. We're just returning safe and
@@ -6285,10 +6289,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
     return -e.errno;
   }
   }
-  
+
   function ___syscall_fstatfs64(fd, size, buf) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       return ___syscall_statfs64(0, size, buf);
     } catch (e) {
@@ -6297,19 +6301,19 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   var MAX_INT53 = 9007199254740992;
-  
+
   var MIN_INT53 = -9007199254740992;
   var bigintToI53Checked = (num) => {
       return (num < MIN_INT53 || num > MAX_INT53) ? NaN : Number(num);
     };
   function ___syscall_ftruncate64(fd, length) {
     length = bigintToI53Checked(length);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(length)) return 61;
       FS.ftruncate(fd, length);
       return 0;
@@ -6320,15 +6324,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   ;
   }
 
-  
+
   var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
       assert(typeof maxBytesToWrite == 'number', 'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!');
       return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
     };
-  
+
   function ___syscall_getcwd(buf, size) {
   try {
-  
+
       if (size === 0) return -28;
       var cwd = FS.cwd();
       var cwdLengthInBytes = lengthBytesUTF8(cwd) + 1;
@@ -6341,21 +6345,21 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function ___syscall_getdents64(fd, dirp, count) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd)
       if (!stream.getdents) {
         stream.getdents = FS.readdir(stream.path);
       }
-  
+
       var struct_size = 280;
       var pos = 0;
       var off = FS.llseek(stream, 0, 1);
-  
+
       var idx = Math.floor(off / struct_size);
-  
+
       while (idx < stream.getdents.length && pos + struct_size <= count) {
         var id;
         var type;
@@ -6394,12 +6398,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
-  
+
+
+
   function ___syscall_getpeername(fd, addr, addrlen, d1, d2, d3) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       if (!sock.daddr) {
         return -53; // The socket is not connected.
@@ -6413,12 +6417,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
-  
+
+
+
   function ___syscall_getsockname(fd, addr, addrlen, d1, d2, d3) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       // TODO: sock.saddr should never be undefined, see TODO in websocket_sock_ops.getname
       var errno = writeSockaddr(addr, sock.family, DNS.lookup_name(sock.saddr || '0.0.0.0'), sock.sport, addrlen);
@@ -6430,10 +6434,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function ___syscall_getsockopt(fd, level, optname, optval, optlen, d1) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       // Minimal getsockopt aimed at resolving https://github.com/emscripten-core/emscripten/issues/2211
       // so only supports SOL_SOCKET with SO_ERROR.
@@ -6455,7 +6459,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   function ___syscall_ioctl(fd, op, varargs) {
   SYSCALLS.varargs = varargs;
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       switch (op) {
         case 21509: {
@@ -6547,10 +6551,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function ___syscall_listen(fd, backlog) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       sock.sock_ops.listen(sock, backlog);
       return 0;
@@ -6562,7 +6566,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_lstat64(path, buf) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       return SYSCALLS.doStat(FS.lstat, path, buf);
     } catch (e) {
@@ -6573,7 +6577,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_mkdirat(dirfd, path, mode) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       path = SYSCALLS.calculateAt(dirfd, path);
       // remove a trailing slash, if one - /a/b/ has basename of '', but
@@ -6590,7 +6594,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_newfstatat(dirfd, path, buf, flags) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       var nofollow = flags & 256;
       var allowEmpty = flags & 4096;
@@ -6607,7 +6611,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   function ___syscall_openat(dirfd, path, flags, varargs) {
   SYSCALLS.varargs = varargs;
   try {
-  
+
       path = SYSCALLS.getStr(path);
       path = SYSCALLS.calculateAt(dirfd, path);
       var mode = varargs ? SYSCALLS.get() : 0;
@@ -6632,21 +6636,21 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           // able to read from the read end after write end is closed.
           refcnt : 2,
         };
-  
+
         pipe.buckets.push({
           buffer: new Uint8Array(PIPEFS.BUCKET_BUFFER_SIZE),
           offset: 0,
           roffset: 0
         });
-  
+
         var rName = PIPEFS.nextname();
         var wName = PIPEFS.nextname();
         var rNode = FS.createNode(PIPEFS.root, rName, 4096, 0);
         var wNode = FS.createNode(PIPEFS.root, wName, 4096, 0);
-  
+
         rNode.pipe = pipe;
         wNode.pipe = pipe;
-  
+
         var readableStream = FS.createStream({
           path: rName,
           node: rNode,
@@ -6655,7 +6659,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           stream_ops: PIPEFS.stream_ops
         });
         rNode.stream = readableStream;
-  
+
         var writableStream = FS.createStream({
           path: wName,
           node: wNode,
@@ -6664,7 +6668,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           stream_ops: PIPEFS.stream_ops
         });
         wNode.stream = writableStream;
-  
+
         return {
           readable_fd: readableStream.fd,
           writable_fd: writableStream.fd
@@ -6673,7 +6677,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   stream_ops:{
   poll(stream) {
           var pipe = stream.node.pipe;
-  
+
           if ((stream.flags & 2097155) === 1) {
             return (256 | 4);
           }
@@ -6685,7 +6689,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               }
             }
           }
-  
+
           return 0;
         },
   ioctl(stream, request, varargs) {
@@ -6697,15 +6701,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   read(stream, buffer, offset, length, position /* ignored */) {
           var pipe = stream.node.pipe;
           var currentLength = 0;
-  
+
           for (var i = 0; i < pipe.buckets.length; i++) {
             var bucket = pipe.buckets[i];
             currentLength += bucket.offset - bucket.roffset;
           }
-  
+
           assert(buffer instanceof ArrayBuffer || ArrayBuffer.isView(buffer));
           var data = buffer.subarray(offset, offset + length);
-  
+
           if (length <= 0) {
             return 0;
           }
@@ -6714,14 +6718,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             throw new FS.ErrnoError(6);
           }
           var toRead = Math.min(currentLength, length);
-  
+
           var totalRead = toRead;
           var toRemove = 0;
-  
+
           for (var i = 0; i < pipe.buckets.length; i++) {
             var currBucket = pipe.buckets[i];
             var bucketSize = currBucket.offset - currBucket.roffset;
-  
+
             if (toRead <= bucketSize) {
               var tmpSlice = currBucket.buffer.subarray(currBucket.roffset, currBucket.offset);
               if (toRead < bucketSize) {
@@ -6740,7 +6744,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               toRemove++;
             }
           }
-  
+
           if (toRemove && toRemove == pipe.buckets.length) {
             // Do not generate excessive garbage in use cases such as
             // write several bytes, read everything, write several bytes, read everything...
@@ -6748,24 +6752,24 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             pipe.buckets[toRemove].offset = 0;
             pipe.buckets[toRemove].roffset = 0;
           }
-  
+
           pipe.buckets.splice(0, toRemove);
-  
+
           return totalRead;
         },
   write(stream, buffer, offset, length, position /* ignored */) {
           var pipe = stream.node.pipe;
-  
+
           assert(buffer instanceof ArrayBuffer || ArrayBuffer.isView(buffer));
           var data = buffer.subarray(offset, offset + length);
-  
+
           var dataLen = data.byteLength;
           if (dataLen <= 0) {
             return 0;
           }
-  
+
           var currBucket = null;
-  
+
           if (pipe.buckets.length == 0) {
             currBucket = {
               buffer: new Uint8Array(PIPEFS.BUCKET_BUFFER_SIZE),
@@ -6776,9 +6780,9 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           } else {
             currBucket = pipe.buckets[pipe.buckets.length - 1];
           }
-  
+
           assert(currBucket.offset <= PIPEFS.BUCKET_BUFFER_SIZE);
-  
+
           var freeBytesInCurrBuffer = PIPEFS.BUCKET_BUFFER_SIZE - currBucket.offset;
           if (freeBytesInCurrBuffer >= dataLen) {
             currBucket.buffer.set(data, currBucket.offset);
@@ -6789,10 +6793,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             currBucket.offset += freeBytesInCurrBuffer;
             data = data.subarray(freeBytesInCurrBuffer, data.byteLength);
           }
-  
+
           var numBuckets = (data.byteLength / PIPEFS.BUCKET_BUFFER_SIZE) | 0;
           var remElements = data.byteLength % PIPEFS.BUCKET_BUFFER_SIZE;
-  
+
           for (var i = 0; i < numBuckets; i++) {
             var newBucket = {
               buffer: new Uint8Array(PIPEFS.BUCKET_BUFFER_SIZE),
@@ -6803,7 +6807,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             newBucket.buffer.set(data.subarray(0, PIPEFS.BUCKET_BUFFER_SIZE));
             data = data.subarray(PIPEFS.BUCKET_BUFFER_SIZE, data.byteLength);
           }
-  
+
           if (remElements > 0) {
             var newBucket = {
               buffer: new Uint8Array(PIPEFS.BUCKET_BUFFER_SIZE),
@@ -6813,7 +6817,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
             pipe.buckets.push(newBucket);
             newBucket.buffer.set(data);
           }
-  
+
           return dataLen;
         },
   close(stream) {
@@ -6831,19 +6835,19 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         return 'pipe[' + (PIPEFS.nextname.current++) + ']';
       },
   };
-  
+
   function ___syscall_pipe(fdPtr) {
   try {
-  
+
       if (fdPtr == 0) {
         throw new FS.ErrnoError(21);
       }
-  
+
       var res = PIPEFS.createPipe();
-  
+
       HEAP32[((fdPtr)>>2)] = res.readable_fd;
       HEAP32[(((fdPtr)+(4))>>2)] = res.writable_fd;
-  
+
       return 0;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
@@ -6853,7 +6857,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_poll(fds, nfds, timeout) {
   try {
-  
+
       var nonzero = 0;
       for (var i = 0; i < nfds; i++) {
         var pollfd = fds + 8 * i;
@@ -6878,16 +6882,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
+
+
   function ___syscall_readlinkat(dirfd, path, buf, bufsize) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       path = SYSCALLS.calculateAt(dirfd, path);
       if (bufsize <= 0) return -28;
       var ret = FS.readlink(path);
-  
+
       var len = Math.min(bufsize, lengthBytesUTF8(ret));
       var endChar = HEAP8[buf+len];
       stringToUTF8(ret, buf, bufsize+1);
@@ -6901,12 +6905,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
-  
+
+
+
   function ___syscall_recvfrom(fd, buf, len, flags, addr, addrlen) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var msg = sock.sock_ops.recvmsg(sock, len);
       if (!msg) return 0; // socket is closed
@@ -6922,12 +6926,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
-  
+
+
+
   function ___syscall_recvmsg(fd, message, flags, d1, d2, d3) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var iov = HEAPU32[(((message)+(8))>>2)];
       var num = HEAP32[(((message)+(12))>>2)];
@@ -6939,7 +6943,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // try to read total data
       var msg = sock.sock_ops.recvmsg(sock, total);
       if (!msg) return 0; // socket is closed
-  
+
       // TODO honor flags:
       // MSG_OOB
       // Requests out-of-band data. The significance and semantics of out-of-band data are protocol-specific.
@@ -6947,7 +6951,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // Peeks at the incoming message.
       // MSG_WAITALL
       // Requests that the function block until the full amount of data requested can be returned. The function may return a smaller amount of data if a signal is caught, if the connection is terminated, if MSG_PEEK was specified, or if an error is pending for the socket.
-  
+
       // write the source address out
       var name = HEAPU32[((message)>>2)];
       if (name) {
@@ -6969,7 +6973,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         bytesRead += length;
         bytesRemaining -= length;
       }
-  
+
       // TODO set msghdr.msg_flags
       // MSG_EOR
       // End of record was received (if supported by the protocol).
@@ -6978,7 +6982,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // MSG_TRUNC
       // Normal data was truncated.
       // MSG_CTRUNC
-  
+
       return bytesRead;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
@@ -6988,7 +6992,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_renameat(olddirfd, oldpath, newdirfd, newpath) {
   try {
-  
+
       oldpath = SYSCALLS.getStr(oldpath);
       newpath = SYSCALLS.getStr(newpath);
       oldpath = SYSCALLS.calculateAt(olddirfd, oldpath);
@@ -7003,7 +7007,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_rmdir(path) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       FS.rmdir(path);
       return 0;
@@ -7013,12 +7017,12 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
-  
+
+
+
   function ___syscall_sendmsg(fd, message, flags, d1, d2, d3) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var iov = HEAPU32[(((message)+(8))>>2)];
       var num = HEAP32[(((message)+(12))>>2)];
@@ -7054,11 +7058,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
+
+
   function ___syscall_sendto(fd, message, length, flags, addr, addr_len) {
   try {
-  
+
       var sock = getSocketFromFD(fd);
       var dest = getSocketAddress(addr, addr_len, true);
       if (!dest) {
@@ -7073,10 +7077,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function ___syscall_socket(domain, type, protocol) {
   try {
-  
+
       var sock = SOCKFS.createSocket(domain, type, protocol);
       assert(sock.stream.fd < 64); // XXX ? select() assumes socket fd values are in 0..63
       return sock.stream.fd;
@@ -7088,7 +7092,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_stat64(path, buf) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       return SYSCALLS.doStat(FS.stat, path, buf);
     } catch (e) {
@@ -7100,7 +7104,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_symlink(target, linkpath) {
   try {
-  
+
       target = SYSCALLS.getStr(target);
       linkpath = SYSCALLS.getStr(linkpath);
       FS.symlink(target, linkpath);
@@ -7111,13 +7115,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function ___syscall_truncate64(path, length) {
     length = bigintToI53Checked(length);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(length)) return 61;
       path = SYSCALLS.getStr(path);
       FS.truncate(path, length);
@@ -7131,7 +7135,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function ___syscall_unlinkat(dirfd, path, flags) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       path = SYSCALLS.calculateAt(dirfd, path);
       if (flags === 0) {
@@ -7151,10 +7155,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   var readI53FromI64 = (ptr) => {
       return HEAPU32[((ptr)>>2)] + HEAP32[(((ptr)+(4))>>2)] * 4294967296;
     };
-  
+
   function ___syscall_utimensat(dirfd, path, times, flags) {
   try {
-  
+
       path = SYSCALLS.getStr(path);
       assert(flags === 0);
       path = SYSCALLS.calculateAt(dirfd, path, true);
@@ -7183,8 +7187,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function __gmtime_js(time, tmPtr) {
     time = bigintToI53Checked(time);;
-  
-    
+
+
       var date = new Date(time * 1000);
       HEAP32[((tmPtr)>>2)] = date.getUTCSeconds();
       HEAP32[(((tmPtr)+(4))>>2)] = date.getUTCMinutes();
@@ -7202,22 +7206,22 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   var isLeapYear = (year) => {
         return year%4 === 0 && (year%100 !== 0 || year%400 === 0);
     };
-  
+
   var MONTH_DAYS_LEAP_CUMULATIVE = [0,31,60,91,121,152,182,213,244,274,305,335];
-  
+
   var MONTH_DAYS_REGULAR_CUMULATIVE = [0,31,59,90,120,151,181,212,243,273,304,334];
   var ydayFromDate = (date) => {
       var leap = isLeapYear(date.getFullYear());
       var monthDaysCumulative = (leap ? MONTH_DAYS_LEAP_CUMULATIVE : MONTH_DAYS_REGULAR_CUMULATIVE);
       var yday = monthDaysCumulative[date.getMonth()] + date.getDate() - 1; // -1 since it's days since Jan 1
-  
+
       return yday;
     };
-  
+
   function __localtime_js(time, tmPtr) {
     time = bigintToI53Checked(time);;
-  
-    
+
+
       var date = new Date(time*1000);
       HEAP32[((tmPtr)>>2)] = date.getSeconds();
       HEAP32[(((tmPtr)+(4))>>2)] = date.getMinutes();
@@ -7226,11 +7230,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       HEAP32[(((tmPtr)+(16))>>2)] = date.getMonth();
       HEAP32[(((tmPtr)+(20))>>2)] = date.getFullYear()-1900;
       HEAP32[(((tmPtr)+(24))>>2)] = date.getDay();
-  
+
       var yday = ydayFromDate(date)|0;
       HEAP32[(((tmPtr)+(28))>>2)] = yday;
       HEAP32[(((tmPtr)+(36))>>2)] = -(date.getTimezoneOffset() * 60);
-  
+
       // Attention: DST is in December in South, and some regions don't have DST at all.
       var start = new Date(date.getFullYear(), 0, 1);
       var summerOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
@@ -7240,10 +7244,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
     ;
   }
 
-  
+
   var __mktime_js = function(tmPtr) {
-  
-    var ret = (() => { 
+
+    var ret = (() => {
       var date = new Date(HEAP32[(((tmPtr)+(20))>>2)] + 1900,
                           HEAP32[(((tmPtr)+(16))>>2)],
                           HEAP32[(((tmPtr)+(12))>>2)],
@@ -7251,7 +7255,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
                           HEAP32[(((tmPtr)+(4))>>2)],
                           HEAP32[((tmPtr)>>2)],
                           0);
-  
+
       // There's an ambiguous hour when the time goes back; the tm_isdst field is
       // used to disambiguate it.  Date() basically guesses, so we fix it up if it
       // guessed wrong, or fill in tm_isdst with the guess if it's -1.
@@ -7270,7 +7274,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         // Don't try setMinutes(date.getMinutes() + ...) -- it's messed up.
         date.setTime(date.getTime() + (trueOffset - guessedOffset)*60000);
       }
-  
+
       HEAP32[(((tmPtr)+(24))>>2)] = date.getDay();
       var yday = ydayFromDate(date)|0;
       HEAP32[(((tmPtr)+(28))>>2)] = yday;
@@ -7281,23 +7285,23 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       HEAP32[(((tmPtr)+(12))>>2)] = date.getDate();
       HEAP32[(((tmPtr)+(16))>>2)] = date.getMonth();
       HEAP32[(((tmPtr)+(20))>>2)] = date.getYear();
-  
+
       return date.getTime() / 1000;
      })();
     return BigInt(ret);
   };
 
-  
-  
-  
-  
-  
+
+
+
+
+
   function __mmap_js(len, prot, flags, fd, offset, allocated, addr) {
     offset = bigintToI53Checked(offset);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd);
       var res = FS.mmap(stream, len, offset, prot, flags);
@@ -7312,13 +7316,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   ;
   }
 
-  
+
   function __msync_js(addr, len, prot, flags, fd, offset) {
     offset = bigintToI53Checked(offset);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(offset)) return 61;
       SYSCALLS.doMsync(addr, SYSCALLS.getStreamFromFD(fd), len, flags, offset);
       return 0;
@@ -7329,15 +7333,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   ;
   }
 
-  
-  
-  
+
+
+
   function __munmap_js(addr, len, prot, flags, fd, offset) {
     offset = bigintToI53Checked(offset);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd);
       if (prot & 2) {
@@ -7354,7 +7358,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   var timers = {
   };
-  
+
   var handleException = (e) => {
       // Certain exception types we do not treat as errors since they are used for
       // internal control flow.
@@ -7372,8 +7376,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       quit_(1, e);
     };
-  
-  
+
+
   var _proc_exit = (code) => {
       EXITSTATUS = code;
       if (!keepRuntimeAlive()) {
@@ -7386,20 +7390,20 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   /** @param {boolean|number=} implicit */
   var exitJS = (status, implicit) => {
       EXITSTATUS = status;
-  
+
       checkUnflushedContent();
-  
+
       // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
       if (keepRuntimeAlive() && !implicit) {
         var msg = `program exited (with status: ${status}), but keepRuntimeAlive() is set (counter=${runtimeKeepaliveCounter}) due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)`;
         readyPromiseReject(msg);
         err(msg);
       }
-  
+
       _proc_exit(status);
     };
   var _exit = exitJS;
-  
+
   var maybeExit = () => {
       if (!keepRuntimeAlive()) {
         try {
@@ -7421,8 +7425,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         handleException(e);
       }
     };
-  
-  
+
+
   var _emscripten_get_now;
       // Modern environment where performance.now() is supported:
       // N.B. a shorter form "_emscripten_get_now = performance.now;" is
@@ -7435,11 +7439,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         clearTimeout(timers[which].id);
         delete timers[which];
       }
-  
+
       // A timeout of zero simply cancels the current timeout so we have nothing
       // more to do.
       if (!timeout_ms) return 0;
-  
+
       var id = setTimeout(() => {
         assert(which in timers);
         delete timers[which];
@@ -7449,8 +7453,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       return 0;
     };
 
-  
-  
+
+
   var stringToNewUTF8 = (str) => {
       var size = lengthBytesUTF8(str) + 1;
       var ret = _malloc(size);
@@ -7464,21 +7468,21 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       var summer = new Date(currentYear, 6, 1);
       var winterOffset = winter.getTimezoneOffset();
       var summerOffset = summer.getTimezoneOffset();
-  
+
       // Local standard timezone offset. Local standard time is not adjusted for daylight savings.
       // This code uses the fact that getTimezoneOffset returns a greater value during Standard Time versus Daylight Saving Time (DST).
       // Thus it determines the expected output during Standard Time, and it compares whether the output of the given date the same (Standard) or less (DST).
       var stdTimezoneOffset = Math.max(winterOffset, summerOffset);
-  
+
       // timezone is specified as seconds west of UTC ("The external variable
       // `timezone` shall be set to the difference, in seconds, between
       // Coordinated Universal Time (UTC) and local standard time."), the same
       // as returned by stdTimezoneOffset.
       // See http://pubs.opengroup.org/onlinepubs/009695399/functions/tzset.html
       HEAPU32[((timezone)>>2)] = stdTimezoneOffset * 60;
-  
+
       HEAP32[((daylight)>>2)] = Number(winterOffset != summerOffset);
-  
+
       function extractZone(date) {
         var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
         return match ? match[1] : "GMT";
@@ -7544,7 +7548,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   var _emscripten_err = (str) => err(UTF8ToString(str));
 
   var _emscripten_exit_with_live_runtime = () => {
-      
+
       throw 'unwind';
     };
 
@@ -7563,7 +7567,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   var _emscripten_memcpy_big = (dest, src, num) => HEAPU8.copyWithin(dest, src, src + num);
 
-  
+
   var abortOnCannotGrowMemory = (requestedSize) => {
       abort(`Cannot enlarge memory arrays to size ${requestedSize} bytes (OOM). Either (1) compile with -sINITIAL_MEMORY=X with X higher than the current value ${HEAP8.length}, (2) compile with -sALLOW_MEMORY_GROWTH which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with -sABORTING_MALLOC=0`);
     };
@@ -7576,7 +7580,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   var ENV = {
   };
-  
+
   var getExecutableName = () => {
       return thisProgram || './this.program';
     };
@@ -7610,7 +7614,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return getEnvStrings.strings;
     };
-  
+
   var stringToAscii = (str, buffer) => {
       for (var i = 0; i < str.length; ++i) {
         assert(str.charCodeAt(i) === (str.charCodeAt(i) & 0xff));
@@ -7619,7 +7623,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // Null-terminate the string
       HEAP8[((buffer)>>0)] = 0;
     };
-  
+
   var _environ_get = (__environ, environ_buf) => {
       var bufSize = 0;
       getEnvStrings().forEach((string, i) => {
@@ -7631,7 +7635,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       return 0;
     };
 
-  
+
   var _environ_sizes_get = (penviron_count, penviron_buf_size) => {
       var strings = getEnvStrings();
       HEAPU32[((penviron_count)>>2)] = strings.length;
@@ -7644,7 +7648,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function _fd_close(fd) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       FS.close(stream);
       return 0;
@@ -7656,7 +7660,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function _fd_fdstat_get(fd, pbuf) {
   try {
-  
+
       var rightsBase = 0;
       var rightsInheriting = 0;
       var flags = 0;
@@ -7697,14 +7701,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return ret;
     };
-  
-  
+
+
   function _fd_pread(fd, iov, iovcnt, offset, pnum) {
     offset = bigintToI53Checked(offset);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd)
       var num = doReadv(stream, iov, iovcnt, offset);
@@ -7733,14 +7737,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return ret;
     };
-  
-  
+
+
   function _fd_pwrite(fd, iov, iovcnt, offset, pnum) {
     offset = bigintToI53Checked(offset);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd)
       var num = doWritev(stream, iov, iovcnt, offset);
@@ -7753,10 +7757,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   ;
   }
 
-  
+
   function _fd_read(fd, iov, iovcnt, pnum) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       var num = doReadv(stream, iov, iovcnt);
       HEAPU32[((pnum)>>2)] = num;
@@ -7767,13 +7771,13 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function _fd_seek(fd, offset, whence, newOffset) {
     offset = bigintToI53Checked(offset);;
-  
-    
+
+
   try {
-  
+
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd);
       FS.llseek(stream, offset, whence);
@@ -7789,7 +7793,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
   function _fd_sync(fd) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       if (stream.stream_ops && stream.stream_ops.fsync) {
         return stream.stream_ops.fsync(stream);
@@ -7801,10 +7805,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
+
   function _fd_write(fd, iov, iovcnt, pnum) {
   try {
-  
+
       var stream = SYSCALLS.getStreamFromFD(fd);
       var num = doWritev(stream, iov, iovcnt);
       HEAPU32[((pnum)>>2)] = num;
@@ -7815,15 +7819,15 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   }
   }
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
   var _getaddrinfo = (node, service, hint, out) => {
       // Note getaddrinfo currently only returns a single addrinfo with ai_next defaulting to NULL. When NULL
       // hints are specified or ai_family set to AF_UNSPEC or ai_socktype or ai_protocol set to 0 then we
@@ -7837,11 +7841,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       var type = 0;
       var proto = 0;
       var ai, last;
-  
+
       function allocaddrinfo(family, type, proto, canon, addr, port) {
         var sa, salen, ai;
         var errno;
-  
+
         salen = family === 10 ?
           28 :
           16;
@@ -7851,7 +7855,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         sa = _malloc(salen);
         errno = writeSockaddr(sa, family, addr, port);
         assert(!errno);
-  
+
         ai = _malloc(32);
         HEAP32[(((ai)+(4))>>2)] = family;
         HEAP32[(((ai)+(8))>>2)] = type;
@@ -7864,10 +7868,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           HEAP32[(((ai)+(16))>>2)] = 16;
         }
         HEAP32[(((ai)+(28))>>2)] = 0;
-  
+
         return ai;
       }
-  
+
       if (hint) {
         flags = HEAP32[((hint)>>2)];
         family = HEAP32[(((hint)+(4))>>2)];
@@ -7880,7 +7884,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       if (!type && proto) {
         type = proto === 17 ? 2 : 1;
       }
-  
+
       // If type or proto are set to zero in hints we should really be returning multiple addrinfo values, but for
       // now default to a TCP STREAM socket so we can at least return a sensible addrinfo given NULL hints.
       if (proto === 0) {
@@ -7889,7 +7893,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       if (type === 0) {
         type = 1;
       }
-  
+
       if (!node && !service) {
         return -2;
       }
@@ -7910,11 +7914,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       if (family !== 0 && family !== 2 && family !== 10) {
         return -6;
       }
-  
+
       if (service) {
         service = UTF8ToString(service);
         port = parseInt(service, 10);
-  
+
         if (isNaN(port)) {
           if (flags & 1024) {
             return -2;
@@ -7924,7 +7928,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           return -8;
         }
       }
-  
+
       if (!node) {
         if (family === 0) {
           family = 2;
@@ -7940,7 +7944,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         HEAPU32[((out)>>2)] = ai;
         return 0;
       }
-  
+
       //
       // try as a numeric address
       //
@@ -7976,7 +7980,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       if (flags & 4) {
         return -2;
       }
-  
+
       //
       // try as a hostname
       //
@@ -7998,10 +8002,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       return 0;
     };
 
-  
-  
-  
-  
+
+
+
+
   var getHostByName = (name) => {
       // generate hostent
       var ret = _malloc(20); // XXX possibly leaked, as are others here
@@ -8020,8 +8024,8 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       HEAPU32[(((ret)+(16))>>2)] = addrListBuf;
       return ret;
     };
-  
-  
+
+
   var _gethostbyaddr = (addr, addrlen, type) => {
       if (type !== 2) {
         setErrNo(5);
@@ -8037,14 +8041,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       return getHostByName(host);
     };
 
-  
+
   var _gethostbyname = (name) => {
       return getHostByName(UTF8ToString(name));
     };
 
-  
-  
-  
+
+
+
   var _getnameinfo = (sa, salen, node, nodelen, serv, servlen, flags) => {
       var info = readSockaddr(sa, salen);
       if (info.errno) {
@@ -8052,9 +8056,9 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       var port = info.port;
       var addr = info.addr;
-  
+
       var overflowed = false;
-  
+
       if (node && nodelen) {
         var lookup;
         if ((flags & 1) || !(lookup = DNS.lookup_addr(addr))) {
@@ -8065,26 +8069,26 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           addr = lookup;
         }
         var numBytesWrittenExclNull = stringToUTF8(addr, node, nodelen);
-  
+
         if (numBytesWrittenExclNull+1 >= nodelen) {
           overflowed = true;
         }
       }
-  
+
       if (serv && servlen) {
         port = '' + port;
         var numBytesWrittenExclNull = stringToUTF8(port, serv, servlen);
-  
+
         if (numBytesWrittenExclNull+1 >= servlen) {
           overflowed = true;
         }
       }
-  
+
       if (overflowed) {
         // Note: even when we overflow, getnameinfo() is specced to write out the truncated results.
         return -12;
       }
-  
+
       return 0;
     };
 
@@ -8093,22 +8097,22 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
   map:{
   },
   };
-  
-  
+
+
   var _setprotoent = (stayopen) => {
       // void setprotoent(int stayopen);
-  
+
       // Allocate and populate a protoent structure given a name, protocol number and array of aliases
       function allocprotoent(name, proto, aliases) {
         // write name into buffer
         var nameBuf = _malloc(name.length + 1);
         stringToAscii(name, nameBuf);
-  
+
         // write aliases into buffer
         var j = 0;
         var length = aliases.length;
         var aliasListBuf = _malloc((length + 1) * 4); // Use length + 1 so we have space for the terminating NULL ptr.
-  
+
         for (var i = 0; i < length; i++, j += 4) {
           var alias = aliases[i];
           var aliasBuf = _malloc(alias.length + 1);
@@ -8116,7 +8120,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           HEAPU32[(((aliasListBuf)+(j))>>2)] = aliasBuf;
         }
         HEAPU32[(((aliasListBuf)+(j))>>2)] = 0; // Terminating NULL pointer.
-  
+
         // generate protoent
         var pe = _malloc(12);
         HEAPU32[((pe)>>2)] = nameBuf;
@@ -8124,7 +8128,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         HEAP32[(((pe)+(8))>>2)] = proto;
         return pe;
       };
-  
+
       // Populate the protocol 'database'. The entries are limited to tcp and udp, though it is fairly trivial
       // to add extra entries from /etc/protocols if desired - though not sure if that'd actually be useful.
       var list = Protocols.list;
@@ -8137,11 +8141,11 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           list.push(entry);
           map['udp'] = map['17'] = entry;
       }
-  
+
       _setprotoent.index = 0;
     };
-  
-  
+
+
   var _getprotobyname = (name) => {
       // struct protoent *getprotobyname(const char *);
       name = UTF8ToString(name);
@@ -8151,7 +8155,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
     };
 
 
-  
+
   var arraySum = (array, index) => {
       var sum = 0;
       for (var i = 0; i <= index; sum += array[i++]) {
@@ -8159,10 +8163,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return sum;
     };
-  
-  
+
+
   var MONTH_DAYS_LEAP = [31,29,31,30,31,30,31,31,30,31,30,31];
-  
+
   var MONTH_DAYS_REGULAR = [31,28,31,30,31,30,31,31,30,31,30,31];
   var addDays = (date, days) => {
       var newDate = new Date(date.getTime());
@@ -8170,7 +8174,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         var leap = isLeapYear(newDate.getFullYear());
         var currentMonth = newDate.getMonth();
         var daysInCurrentMonth = (leap ? MONTH_DAYS_LEAP : MONTH_DAYS_REGULAR)[currentMonth];
-  
+
         if (days > daysInCurrentMonth-newDate.getDate()) {
           // we spill over to next month
           days -= (daysInCurrentMonth-newDate.getDate()+1);
@@ -8187,24 +8191,24 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           return newDate;
         }
       }
-  
+
       return newDate;
     };
-  
-  
-  
-  
+
+
+
+
   var writeArrayToMemory = (array, buffer) => {
       assert(array.length >= 0, 'writeArrayToMemory array must have a length (should be an array or typed array)')
       HEAP8.set(array, buffer);
     };
-  
+
   var _strftime = (s, maxsize, format, tm) => {
       // size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr);
       // http://pubs.opengroup.org/onlinepubs/009695399/functions/strftime.html
-  
+
       var tm_zone = HEAPU32[(((tm)+(40))>>2)];
-  
+
       var date = {
         tm_sec: HEAP32[((tm)>>2)],
         tm_min: HEAP32[(((tm)+(4))>>2)],
@@ -8218,9 +8222,9 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         tm_gmtoff: HEAP32[(((tm)+(36))>>2)],
         tm_zone: tm_zone ? UTF8ToString(tm_zone) : ''
       };
-  
+
       var pattern = UTF8ToString(format);
-  
+
       // expand format
       var EXPANSION_RULES_1 = {
         '%c': '%a %b %d %H:%M:%S %Y',     // Replaced by the locale's appropriate date and time representation - e.g., Mon Aug  3 14:02:01 2013
@@ -8256,10 +8260,10 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       for (var rule in EXPANSION_RULES_1) {
         pattern = pattern.replace(new RegExp(rule, 'g'), EXPANSION_RULES_1[rule]);
       }
-  
+
       var WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  
+
       function leadingSomething(value, digits, character) {
         var str = typeof value == 'number' ? value.toString() : (value || '');
         while (str.length < digits) {
@@ -8267,16 +8271,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         }
         return str;
       }
-  
+
       function leadingNulls(value, digits) {
         return leadingSomething(value, digits, '0');
       }
-  
+
       function compareByDay(date1, date2) {
         function sgn(value) {
           return value < 0 ? -1 : (value > 0 ? 1 : 0);
         }
-  
+
         var compare;
         if ((compare = sgn(date1.getFullYear()-date2.getFullYear())) === 0) {
           if ((compare = sgn(date1.getMonth()-date2.getMonth())) === 0) {
@@ -8285,7 +8289,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         }
         return compare;
       }
-  
+
       function getFirstWeekStartDate(janFourth) {
           switch (janFourth.getDay()) {
             case 0: // Sunday
@@ -8304,16 +8308,16 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
               return new Date(janFourth.getFullYear()-1, 11, 30);
           }
       }
-  
+
       function getWeekBasedYear(date) {
           var thisDate = addDays(new Date(date.tm_year+1900, 0, 1), date.tm_yday);
-  
+
           var janFourthThisYear = new Date(thisDate.getFullYear(), 0, 4);
           var janFourthNextYear = new Date(thisDate.getFullYear()+1, 0, 4);
-  
+
           var firstWeekStartThisYear = getFirstWeekStartDate(janFourthThisYear);
           var firstWeekStartNextYear = getFirstWeekStartDate(janFourthNextYear);
-  
+
           if (compareByDay(firstWeekStartThisYear, thisDate) <= 0) {
             // this date is after the start of the first week of this year
             if (compareByDay(firstWeekStartNextYear, thisDate) <= 0) {
@@ -8323,7 +8327,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           }
           return thisDate.getFullYear()-1;
       }
-  
+
       var EXPANSION_RULES_2 = {
         '%a': (date) => WEEKDAYS[date.tm_wday].substring(0,3) ,
         '%A': (date) => WEEKDAYS[date.tm_wday],
@@ -8345,7 +8349,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           // %G is replaced by 1998 and %V is replaced by 53. If December 29th, 30th,
           // or 31st is a Monday, it and any following days are part of week 1 of the following year.
           // Thus, for Tuesday 30th December 1997, %G is replaced by 1998 and %V is replaced by 01.
-  
+
           return getWeekBasedYear(date).toString().substring(2);
         },
         '%G': (date) => getWeekBasedYear(date),
@@ -8429,7 +8433,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         '%Z': (date) => date.tm_zone,
         '%%': () => '%'
       };
-  
+
       // Replace %% with a pair of NULLs (which cannot occur in a C string), then
       // re-inject them after processing.
       pattern = pattern.replace(/%%/g, '\0\0')
@@ -8439,29 +8443,29 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         }
       }
       pattern = pattern.replace(/\0\0/g, '%')
-  
+
       var bytes = intArrayFromString(pattern, false);
       if (bytes.length > maxsize) {
         return 0;
       }
-  
+
       writeArrayToMemory(bytes, s);
       return bytes.length-1;
     };
 
-  
+
   var _system = (command) => {
       if (ENVIRONMENT_IS_NODE) {
         if (!command) return 1; // shell is available
-  
+
         var cmdstr = UTF8ToString(command);
         if (!cmdstr.length) return 0; // this is what glibc seems to do (shell works test?)
-  
+
         var cp = require('child_process');
         var ret = cp.spawnSync(cmdstr, [], {shell:true, stdio:'inherit'});
-  
+
         var _W_EXITCODE = (ret, sig) => ((ret) << 8 | (sig));
-  
+
         // this really only can happen if process is killed by signal
         if (ret.status === null) {
           // sadly node doesn't expose such function
@@ -8480,7 +8484,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           }
           return _W_EXITCODE(0, signalToNumber(ret.signal));
         }
-  
+
         return _W_EXITCODE(ret.status, 0);
       }
       // int system(const char *command);
@@ -8493,7 +8497,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
 
 
 
-  
+
   var stringToUTF8OnStack = (str) => {
       var size = lengthBytesUTF8(str) + 1;
       var ret = stackAlloc(size);
@@ -8536,7 +8540,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         target.push((n % 128) | 128, n >> 7);
       }
     };
-  
+
   var sigToWasmTypes = (sig) => {
       var typeNames = {
         'i': 'i32',
@@ -8556,7 +8560,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
       return type;
     };
-  
+
   var generateFuncType = (sig, target) => {
       var sigRet = sig.slice(0, 1);
       var sigParam = sig.slice(1);
@@ -8567,7 +8571,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         'f': 0x7d, // f32
         'd': 0x7c, // f64
       };
-  
+
       // Parameters, length + signatures
       target.push(0x60 /* form: func */);
       uleb128Encode(sigParam.length, target);
@@ -8575,7 +8579,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
         assert(sigParam[i] in typeCodes, 'invalid signature char: ' + sigParam[i]);
     target.push(typeCodes[sigParam[i]]);
       }
-    
+
       // Return values, length + signatures
       // With no multi-return in MVP, either 0 (void) or 1 (anything else)
       if (sigRet == 'v') {
@@ -8585,7 +8589,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       }
     };
   var convertJsFunctionToWasm = (func, sig) => {
-  
+
       // If the type reflection proposal is available, use the new
       // "WebAssembly.Function" constructor.
       // Otherwise, construct a minimal wasm module importing the JS function and
@@ -8593,14 +8597,14 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       if (typeof WebAssembly.Function == "function") {
         return new WebAssembly.Function(sigToWasmTypes(sig), func);
       }
-  
+
       // The module is static, with the exception of the type section, which is
       // generated based on the signature passed in.
       var typeSectionBody = [
         0x01, // count: 1
       ];
       generateFuncType(sig, typeSectionBody);
-  
+
       // Rest of the module is static
       var bytes = [
         0x00, 0x61, 0x73, 0x6d, // magic ("\0asm")
@@ -8610,7 +8614,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
       // Write the overall length of the type section followed by the body
       uleb128Encode(typeSectionBody.length, bytes);
       bytes.push.apply(bytes, typeSectionBody);
-  
+
       // The rest of the module is static
       bytes.push(
         0x02, 0x07, // import section
@@ -8620,7 +8624,7 @@ function ffi_prep_closure_loc_js(closure,cif,fun,user_data,codeloc) { var abi = 
           // (export "f" (func 0 (type 0)))
           0x01, 0x01, 0x66, 0x00, 0x00,
       );
-  
+
       // We can compile this wasm module synchronously because it is very small.
       // This accepts an import (at "e.f"), that it reroutes to an export (at "f")
       var module = new WebAssembly.Module(new Uint8Array(bytes));
