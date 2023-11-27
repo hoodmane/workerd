@@ -12,6 +12,11 @@ const config :Workerd.Config = (
       http = (),
       service = "main"
     ),
+  ],
+  autogates = [
+    ( name = "workerd-autogate-builtin-wasm",
+      enabled = true
+    )
   ]
 );
 

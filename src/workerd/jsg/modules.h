@@ -429,7 +429,7 @@ public:
         }
         if (module.which() == Module::DATA) {
           KJ_ASSERT(server::Autogate::isEnabled(server::AutogateKey::BUILTIN_WASM));
-          addBuiltinModule(specifier, [specifier, sourceCode, this](Lock& lock) {
+          addBuiltinModule(specifier, [specifier, sourceCode](Lock& lock) {
             auto value = kj::heapArray(sourceCode.asBytes());
             v8::Local<v8::ArrayBuffer> data;
             {

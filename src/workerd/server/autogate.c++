@@ -12,6 +12,8 @@ kj::StringPtr KJ_STRINGIFY(AutogateKey key) {
   switch (key) {
     case AutogateKey::TEST_WORKERD:
       return "test-workerd"_kj;
+    case AutogateKey::BUILTIN_WASM:
+      return "builtin-wasm"_kj;
     case AutogateKey::NumOfKeys:
       KJ_FAIL_ASSERT("NumOfKeys should not be used in getName");
   }
