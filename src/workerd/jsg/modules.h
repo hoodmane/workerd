@@ -399,7 +399,7 @@ public:
       auto type = module.getType();
       auto filter = maybeFilter.orDefault(type);
       if (type == filter) {
-        if (module.which() == Module::WASM) {
+        if (module.which() != Module::SRC) {
           KJ_ASSERT(server::Autogate::isEnabled(server::AutogateKey::BUILTIN_WASM));
           using Key = typename Entry::Key;
           auto specifier = module.getName();
@@ -407,51 +407,53 @@ public:
           if (type == Type::BUILTIN && entries.find(Key(path, Type::BUNDLE)) != kj::none) {
             continue;
           }
+          switch(module.which()) {
+          case Module::WASM:
+            // The body of this callback is copied from `compileWasmGlobal` in src/workerd/server/workerd-api.c++.
+            addBuiltinModule(specifier, [specifier, module, this](Lock& lock) {
+              lock.setAllowEval(true);
+              KJ_DEFER(lock.setAllowEval(false));
 
-          // The body of this callback is copied from `compileWasmGlobal` in src/workerd/server/workerd-api.c++.
-          addBuiltinModule(specifier, [specifier, module, this](Lock& lock) {
-            lock.setAllowEval(true);
-            KJ_DEFER(lock.setAllowEval(false));
+              // Allow Wasm compilation to spawn a background thread for tier-up, i.e. recompiling
+              // Wasm with optimizations in the background. Otherwise Wasm startup is way too slow.
+              // Until tier-up finishes, requests will be handled using Liftoff-generated code, which
+              // compiles fast but runs slower.
+              AllowV8BackgroundThreadsScope scope;
+              auto wasmModule = jsg::compileWasmModule(lock, module.getWasm().asBytes(), this->observer);
+              return jsg::ModuleRegistry::ModuleInfo(
+                    lock,
+                    specifier,
+                    kj::none,
+                    jsg::ModuleRegistry::WasmModuleInfo(lock, wasmModule));
+            }, type);
+            continue;
+          case Module::DATA:
+            addBuiltinModule(specifier, [specifier, module](Lock& lock) {
+              auto value = kj::heapArray(module.getData().asBytes().asBytes());
+              v8::Local<v8::ArrayBuffer> data;
+              {
+                // Code duplicated from ArrayBufferWrapper::wrap in value.h because I
+                // couldn't figure out how to use ArrayBufferWrapper directly.
+                // TODO: Avoid code duplication
+                byte* begin = value.begin();
+                size_t size = value.size();
+                auto ownerPtr = new kj::Array<byte>(kj::mv(value));
 
-            // Allow Wasm compilation to spawn a background thread for tier-up, i.e. recompiling
-            // Wasm with optimizations in the background. Otherwise Wasm startup is way too slow.
-            // Until tier-up finishes, requests will be handled using Liftoff-generated code, which
-            // compiles fast but runs slower.
-            AllowV8BackgroundThreadsScope scope;
-            auto wasmModule = jsg::compileWasmModule(lock, module.getWasm().asBytes(), this->observer);
-            return jsg::ModuleRegistry::ModuleInfo(
-                  lock,
-                  specifier,
-                  kj::none,
-                  jsg::ModuleRegistry::WasmModuleInfo(lock, wasmModule));
-          }, type);
-          continue;
-        }
-        if (module.which() == Module::DATA) {
-          KJ_ASSERT(server::Autogate::isEnabled(server::AutogateKey::BUILTIN_WASM));
-          addBuiltinModule(specifier, [specifier, sourceCode](Lock& lock) {
-            auto value = kj::heapArray(sourceCode.asBytes());
-            v8::Local<v8::ArrayBuffer> data;
-            {
-              // Code duplicated from ArrayBufferWrapper::wrap in value.h because I
-              // couldn't figure out how to use ArrayBufferWrapper directly.
-              // TODO: Avoid code duplication
-              byte* begin = value.begin();
-              size_t size = value.size();
-              auto ownerPtr = new kj::Array<byte>(kj::mv(value));
+                std::unique_ptr<v8::BackingStore> backing =
+                    v8::ArrayBuffer::NewBackingStore(begin, size,
+                        [](void* begin, size_t size, void* ownerPtr){
+                          delete reinterpret_cast<kj::Array<byte>*>(ownerPtr);
+                        }, ownerPtr);
+                data = v8::ArrayBuffer::New(lock.v8Isolate, kj::mv(backing));
+              }
 
-              std::unique_ptr<v8::BackingStore> backing =
-                  v8::ArrayBuffer::NewBackingStore(begin, size,
-                      [](void* begin, size_t size, void* ownerPtr){
-                        delete reinterpret_cast<kj::Array<byte>*>(ownerPtr);
-                      }, ownerPtr);
-              data = v8::ArrayBuffer::New(lock.v8Isolate, kj::mv(backing));
-            }
-
-            return jsg::ModuleRegistry::ModuleInfo(lock, specifier, kj::none,
-                                                  jsg::ModuleRegistry::DataModuleInfo(lock, data));
-          }, type);
-          continue;
+              return jsg::ModuleRegistry::ModuleInfo(lock, specifier, kj::none,
+                                                    jsg::ModuleRegistry::DataModuleInfo(lock, data));
+            }, type);
+            continue;
+          case Module::SRC:
+            KJ_UNREACHABLE
+          }
         }
         // TODO: asChars() might be wrong for wide characters
         addBuiltinModule(module.getName(), module.getSrc().asChars(), type);
