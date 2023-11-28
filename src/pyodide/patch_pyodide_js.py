@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PRELUDE = """
-import {WebAssembly} from "pyodide-internal:webassembly_wrapper";
+import {WebAssembly, Date} from "pyodide-internal:builtin_wrappers";
 
 function addEventListener(){}
 """
