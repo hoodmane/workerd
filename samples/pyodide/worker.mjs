@@ -9,20 +9,23 @@ async function setupPyodide() {
   });
   initializePackageIndex(pyodide, JSON.parse(lockFile));
   const t2 = performance.now();
-  // Must disable check integrity:
-  // Subrequest integrity checking is not implemented. The integrity option
-  // must be either undefined or an empty string.
   const origLoadPackage = pyodide.loadPackage;
-  pyodide.loadPackage = async function(packages, options) {
-    return await origLoadPackage(packages, {checkIntegrity: false, ...options});
-  }
+  pyodide.loadPackage = async function (packages, options) {
+    // Must disable check integrity:
+    // Subrequest integrity checking is not implemented. The integrity option
+    // must be either undefined or an empty string.
+    return await origLoadPackage(packages, {
+      checkIntegrity: false,
+      ...options,
+    });
+  };
   return pyodide;
 }
 
 function initializePackageIndex(pyodide, lockfile) {
   if (!lockfile.packages) {
     throw new Error(
-      "Loaded pyodide lock file does not contain the expected key 'packages'.",
+      "Loaded pyodide lock file does not contain the expected key 'packages'."
     );
   }
   const API = pyodide._api;
@@ -47,11 +50,8 @@ function initializePackageIndex(pyodide, lockfile) {
   }
 
   API.lockfile_unvendored_stdlibs =
-    API.lockfile_unvendored_stdlibs_and_test.filter(
-      (lib) => lib !== "test",
-    );
+    API.lockfile_unvendored_stdlibs_and_test.filter((lib) => lib !== "test");
 }
-
 
 export default {
   async fetch(request) {
@@ -68,11 +68,8 @@ export default {
   async test() {
     const pyodide = await setupPyodide();
     const fetchHandler = pyodide.pyimport("worker").fetch;
-    // Must disable check integrity:
-    // Subrequest integrity checking is not implemented. The integrity option
-    // must be either undefined or an empty string.
     await pyodide.loadPackage("micropip");
     const result = fetchHandler(new Request(""));
     console.log(result);
-  }
+  },
 };
