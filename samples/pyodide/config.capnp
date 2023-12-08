@@ -24,6 +24,7 @@ const mainWorker :Workerd.Worker = (
   modules = [
     (name = "worker", esModule = embed "./worker.mjs"),
     (name = "worker.py", data = embed "./worker.py"),
+    (name = "pyodide-lock.json", text = embed "./pyodide-lock.json"),
   ],
   compatibilityDate = "2023-02-28",
   compatibilityFlags = ["experimental"],
