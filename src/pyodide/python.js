@@ -13,6 +13,7 @@
  */
 import { _createPyodideModule } from "pyodide-internal:generated/pyodide.asm";
 import pyodideWasmModule from "pyodide-internal:generated/pyodide.asm.wasm";
+import pyodideLock from "pyodide-internal:generated/pyodide-lock.json";
 
 
 /**
@@ -259,11 +260,57 @@ function simpleRunPython(emscriptenModule, code) {
   }
 }
 
+function initializePackageIndex(API, lockFile) {
+  if (!lockFile.packages) {
+    throw new Error(
+      "Loaded pyodide lock file does not contain the expected key 'packages'."
+    );
+  }
+  API.config.indexURL = "https://cdn.jsdelivr.net/pyodide/v0.25.0a1/full/";
+  globalThis.location = "https://cdn.jsdelivr.net/pyodide/v0.25.0a1/full/";
+  API.lockfile_info = lockFile.info;
+  API.lockfile_packages = lockFile.packages;
+  API.repodata_info = lockFile.info;
+  API.repodata_packages = lockFile.packages;
+  API.lockfile_unvendored_stdlibs_and_test = [];
+
+  // compute the inverted index for imports to package names
+  API._import_name_to_package_name = new Map();
+  for (let name of Object.keys(API.lockfile_packages)) {
+    const pkg = API.lockfile_packages[name];
+
+    for (let import_name of pkg.imports) {
+      API._import_name_to_package_name.set(import_name, name);
+    }
+
+    if (pkg.package_type === "cpython_module") {
+      API.lockfile_unvendored_stdlibs_and_test.push(name);
+    }
+  }
+
+  API.lockfile_unvendored_stdlibs =
+    API.lockfile_unvendored_stdlibs_and_test.filter((lib) => lib !== "test");
+}
+
 export async function loadPyodide() {
   const emscriptenSettings = getEmscriptenSettings();
   const emscriptenModule = await instantiateEmscriptenModule(emscriptenSettings);
   prepareWasmLinearMemory(emscriptenModule);
   // Finish setting up Pyodide's ffi so we can use the nice Python interface
   emscriptenModule.API.finalizeBootstrap();
-  return emscriptenModule.API.public_api;
+  const lockFile = JSON.parse(new TextDecoder().decode(pyodideLock));
+  initializePackageIndex(emscriptenModule.API, lockFile);
+  console.log("initializePackageIndex");
+  const pyodide = emscriptenModule.API.public_api;
+  const origLoadPackage = pyodide.loadPackage;
+  pyodide.loadPackage = async function (packages, options) {
+    // Must disable check integrity:
+    // Subrequest integrity checking is not implemented. The integrity option
+    // must be either undefined or an empty string.
+    return await origLoadPackage(packages, {
+      checkIntegrity: false,
+      ...options,
+    });
+  };
+  return pyodide;
 }

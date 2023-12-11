@@ -73,6 +73,7 @@ function checkCallee() {
   }
   if (!isOkay) {
     console.warn("Invalid call to `WebAssembly.Module`");
+    console.warn(new Error().stack);
     throw new Error();
   }
 }
@@ -94,12 +95,21 @@ function prepareStackTrace(_error, stack) {
   try {
     const funcName = stack[2].getFunctionName();
     const fileName = stack[2].getFileName();
-    return (
-      funcName === "convertJsFunctionToWasm" &&
-      fileName === "pyodide-internal:generated/pyodide.asm"
-    );
+    if (fileName !== "pyodide-internal:generated/pyodide.asm") {
+      return false;
+    }
+    return ["loadModule", "convertJsFunctionToWasm"].includes(funcName);
   } catch (e) {
     console.warn(e);
     return false;
   }
+}
+
+export async function wasmInstantiate(module, imports) {
+  if (!(module instanceof WebAssembly.Module)) {
+    checkCallee();
+    module = UnsafeEval.newWasmModule(module);
+  }
+  const instance = new WebAssembly.Instance(module, imports);
+  return {module, instance};
 }
